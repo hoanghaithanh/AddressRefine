@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}AddressRefine{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body>
+  <header class="site-header">
+    <h1>AddressRefine</h1>
+    <nav class="stepper">
+      <span class="step {% if active_step == 'upload' %}current{% endif %}">1. Upload</span>
+      <span class="step {% if active_step == 'mapping' %}current{% endif %}">2. Mapping</span>
+      <span class="step step-future">3. Algorithm</span>
+      <span class="step step-future">4. Results</span>
+    </nav>
+  </header>
+
+  <main class="content">
+    {% include "partials/_flash.html" %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

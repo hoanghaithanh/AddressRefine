@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Upload — AddressRefine{% endblock %}
+
+{% block content %}
+<h2>Upload your address CSV</h2>
+<p>Choose a CSV file containing the addresses you want to de-duplicate.</p>
+
+<form method="post" action="/upload" enctype="multipart/form-data" class="upload-form">
+  <input type="file" name="file" accept=".csv" required>
+  <button type="submit">Upload</button>
+</form>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Column Mapping — AddressRefine{% endblock %}
+
+{% block content %}
+<h2>Map your columns</h2>
+<p>Tell us which CSV columns correspond to each address field. Street is required;
+   at least one of Zip or City is also required.</p>
+
+<form method="post" action="/mapping" class="mapping-form">
+  <label for="street_col">Street (required)</label>
+  <select id="street_col" name="street_col" required>
+    <option value="" disabled {% if not mapping.street_col %}selected{% endif %}>-- choose --</option>
+    {% for header in headers %}
+      <option value="{{ header }}" {% if header == mapping.street_col %}selected{% endif %}>{{ header }}</option>
+    {% endfor %}
+  </select>
+
+  <label for="zip_col">Zip</label>
+  <select id="zip_col" name="zip_col">
+    <option value="" {% if not mapping.zip_col %}selected{% endif %}>-- none --</option>
+    {% for header in headers %}
+      <option value="{{ header }}" {% if header == mapping.zip_col %}selected{% endif %}>{{ header }}</option>
+    {% endfor %}
+  </select>
+
+  <label for="city_col">City</label>
+  <select id="city_col" name="city_col">
+    <option value="" {% if not mapping.city_col %}selected{% endif %}>-- none --</option>
+    {% for header in headers %}
+      <option value="{{ header }}" {% if header == mapping.city_col %}selected{% endif %}>{{ header }}</option>
+    {% endfor %}
+  </select>
+
+  <label for="country_col">Country</label>
+  <select id="country_col" name="country_col">
+    <option value="" {% if not mapping.country_col %}selected{% endif %}>-- none --</option>
+    {% for header in headers %}
+      <option value="{{ header }}" {% if header == mapping.country_col %}selected{% endif %}>{{ header }}</option>
+    {% endfor %}
+  </select>
+
+  <button type="submit">Save mapping</button>
+</form>
+{% endblock %}
