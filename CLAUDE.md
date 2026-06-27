@@ -46,3 +46,11 @@ ruff format --check .              # format check
 ## Workflow
 
 This project is built milestone-by-milestone (see the plan file above for the full breakdown: M1 scaffold+upload+mapping, M2 key-collision algorithms, M3 nearest-neighbor algorithms+blocking, M4 review/merge, M5 export+CI). Each milestone goes through a coder pass, then a tester pass, then a senior-dev review pass before moving to the next one.
+
+## GitHub repo conventions
+
+- **Repo**: https://github.com/hoanghaithanh/AddressRefine (public). Remote `origin` uses SSH.
+- **Branching, from M2 onward**: one feature branch per milestone (e.g. `m2-fingerprint-algorithms`), opened as a PR linked to that milestone's issue. The senior-dev review pass posts its findings as PR comments before merge. M1 was the exception — it was committed directly to `main` before this convention was adopted.
+- **Branch protection on `main`**: PRs required for all changes (no direct pushes), no force-push, no branch deletion. `required_approving_review_count` is intentionally `0` — this is a solo project, so the senior-dev review pass substitutes for a second human approver rather than blocking merge on one.
+- **Milestones/Issues/Project board**: GitHub Milestones M1–M5 mirror the plan's milestone breakdown (M1 is closed). Each milestone has one tracking issue (#1–#5) summarizing its scope from the plan. All issues are on the "AddressRefine Roadmap" project board. When a milestone's scope changes, update its issue body and milestone description, not just this file.
+- **CI status checks are not yet required** on the branch protection rule because `.github/workflows/ci.yml` doesn't exist until M5. Once M5 lands CI, add it as a required status check on `main`.
