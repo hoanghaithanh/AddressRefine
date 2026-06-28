@@ -40,7 +40,7 @@ expected to produce, and current status.
 | FR-4.2 | AC-M2-9 | `tests/test_algorithms/test_fingerprint.py::test_blank_address_excluded_from_clustering` | Planned |
 | FR-4.2 | AC-M2-10 | `tests/test_services/test_matching_service.py::test_singleton_keys_produce_no_candidate_pair` | Planned |
 | FR-3.3 | AC-M2-11 | `tests/test_algorithms/test_ngram_fingerprint.py::test_default_n_is_2` | Planned |
-| FR-4.2 | AC-M2-12 | `tests/test_algorithms/test_ngram_fingerprint.py::test_ngram_key_construction` | Planned |
+| FR-4.2 | AC-M2-12 | `tests/test_algorithms/test_ngram_fingerprint.py::test_ngram_key_construction_uses_hyphen_delimiter` | Planned |
 | FR-4.2 | AC-M2-13 | `tests/test_algorithms/test_ngram_fingerprint.py::test_strings_shorter_than_n_excluded` | Planned |
 | FR-3.4 | AC-M2-14 | `tests/test_algorithms/test_ngram_fingerprint.py::test_different_n_can_change_clusters` | Planned |
 | FR-4.1 | AC-M2-15 | `tests/test_services/test_matching_service.py::test_run_matching_uses_extract_street_addresses` | Planned |
@@ -50,8 +50,12 @@ expected to produce, and current status.
 | FR-3.2 | AC-M2-19 | `tests/test_routers/test_algorithm.py::test_get_algorithm_without_mapping_redirects` | Planned |
 | FR-3.4 | AC-M2-20 | `tests/test_routers/test_algorithm.py::test_post_algorithm_persists_and_runs_matching` | Planned |
 | FR-5.1 | AC-M2-21 | `tests/test_routers/test_results.py::test_get_results_renders_groups_readonly` | Planned |
+| FR-5.1 | AC-M2-21a | `tests/test_routers/test_results.py::test_get_results_distance_column_blank_for_key_collision` | Planned |
 | FR-5.1 | AC-M2-22 | `tests/test_routers/test_results.py::test_get_results_without_algorithm_redirects` | Planned |
 | FR-4.3 | AC-M2-23 | reviewer pass (static check: no `import pandas` under `app/algorithms/`) | Planned |
+| FR-2.6 (updated) | AC-M2-24 | `tests/test_routers/test_mapping.py::test_post_mapping_valid_redirects_to_algorithm` | Planned |
+| FR-3.4 | AC-M2-25 | `tests/test_routers/test_algorithm.py::test_post_algorithm_invalid_n_returns_422` | Planned |
+| FR-5.1 | AC-M2-26 | `tests/test_routers/test_results.py::test_get_results_empty_state_suggests_next_action` | Planned |
 
 ## M3-M5
 

@@ -50,3 +50,25 @@ backend can be added without rewriting matching logic.
 
 - Related: `MatchingAlgorithm` ABC (`app/algorithms/base.py`),
   `ComputeBackend.extract_street_addresses`.
+
+## US-M2-6: Move straight from mapping into algorithm selection
+
+As a user who has just confirmed my column mapping, I want to land on the
+algorithm-selection page next, not back on the mapping page, so that the
+upload -> mapping -> algorithm -> results flow reads as one continuous
+sequence instead of a dead end at mapping.
+
+- Related: `POST /mapping` (`app/routers/mapping.py`) redirect target
+  changes from `/mapping` to `/algorithm` as part of M2 (see AC-M2-24;
+  resolves OQ-M2-1).
+
+## US-M2-7: Be told clearly when no duplicates were found
+
+As a user whose chosen algorithm/parameters found no candidate
+duplicates, I want the results page to tell me that plainly and suggest
+what to try next (a different algorithm, or different parameters), so
+that I'm not left staring at a blank page wondering if something is
+broken.
+
+- Related: `GET /results` empty-state rendering (see AC-M2-26; resolves
+  OQ-M2-3).

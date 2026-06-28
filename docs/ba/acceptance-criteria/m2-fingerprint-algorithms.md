@@ -85,11 +85,13 @@ shall declare a default of `2` for `n`, and calling `run()` with an empty
 
 Given normalization (lowercase, strip punctuation) followed by space
 removal, the key shall be built from all character n-grams of the
-resulting string, deduplicated and sorted before joining. E.g. for `n=2`
-on normalized `"abcab"` (after space removal), the n-gram multiset is
-`{ab, bc, ca, ab}` -> deduped+sorted -> `["ab", "bc", "ca"]` -> key
-`"ab bc ca"` (exact join delimiter is an implementation detail the coder
-may choose, but must be deterministic and consistent for equal inputs).
+resulting string, deduplicated and sorted, then joined with a hyphen
+(`"-"`) delimiter. E.g. for `n=2` on normalized `"abcab"` (after space
+removal), the n-gram multiset is `{ab, bc, ca, ab}` -> deduped+sorted ->
+`["ab", "bc", "ca"]` -> key `"ab-bc-ca"`. The delimiter is fixed
+(resolved, no longer implementation-defined) so fingerprint keys are
+comparable/loggable across runs and across any future debugging surface
+that displays them.
 
 ### AC-M2-13 — Strings shorter than `n` are excluded from clustering
 
@@ -157,11 +159,66 @@ be present in the markup (per the issue: "checkboxes inert") but there
 shall be no working `POST` handler under `/results/*` in M2 — any such
 request shall 404 or otherwise have no effect on `candidate_pairs`.
 
+### AC-M2-21a — Results table includes a `distance` column, blank for M2's key-collision algorithms
+
+Given `_results_table.html`/`_pair_row.html` already render from
+`CandidatePair`, whose `distance` field is `None` for key-collision
+algorithms per the plan's data model (`"distance" (None for
+key-collision)`), the M2 results table shall include a `distance` column
+that renders blank (or a placeholder such as `"—"`) whenever
+`pair.distance is None`, rather than omitting the column from markup
+entirely (resolves OQ-M2-5). Rationale for forcing this in now: the field
+already exists in `CandidatePair`'s specified shape with a `None`
+default, so rendering it conditionally (`{% if pair.distance is not none
+%}...{% endif %}`) is a one-line template conditional, not a data-shape
+or plumbing change — the "no awkward complication" bar from the
+coordinator's resolution is met. If the M2 coder finds this requires
+more than that (e.g. the partial templates don't yet exist in a shape
+where `pair.distance` is cheaply accessible), they should flag it back
+rather than force a workaround, per the coordinator's original
+condition.
+
 ### AC-M2-22 — `GET /results` with no algorithm run yet
 
 Given a session with a confirmed mapping but no algorithm selection made
 yet, `GET /results` shall redirect to `/algorithm` (mirroring the
 upload-then-mapping and mapping-then-algorithm redirect chain).
+
+### AC-M2-24 — `POST /mapping` redirects to `/algorithm`, not `/mapping`
+
+Given a valid mapping submission, `POST /mapping` shall redirect (303) to
+`/algorithm` rather than back to `/mapping`. This changes M1's existing
+redirect target as part of M2 scope (resolves OQ-M2-1): `/algorithm`
+would otherwise be unreachable through the normal navigation flow once
+it exists. `app/routers/mapping.py`'s existing code comment already
+anticipated this change.
+
+### AC-M2-25 — `POST /algorithm` rejects invalid `n` for N-Gram Fingerprint
+
+Given a submission to `POST /algorithm` with `algorithm_key=
+"ngram_fingerprint"` and an `n` value that is not a positive integer
+(`n <= 0`, e.g. `0` or `-1`, or a non-integer value), the system shall
+reject the submission with HTTP 422 and a flash error message, and shall
+**not** persist the invalid params onto `session.algorithm_params` nor
+invoke `run_matching`. Valid integers `n >= 1` shall be accepted
+(resolves OQ-M2-2). This mirrors the validation pattern already
+established in `app/routers/mapping.py` (re-render with a 422 + flash
+message rather than a generic 500/stack trace).
+
+### AC-M2-26 — `GET /results` shows an actionable empty state when no clusters are found
+
+Given an algorithm run that produces zero multi-row clusters (no
+candidate pairs at all), `GET /results` shall render an explicit message
+that both states no candidate duplicates were found **and** suggests a
+concrete next action — trying a different algorithm or adjusting the
+current algorithm's parameters (e.g. "No candidate duplicates found with
+the current algorithm and settings. Try a different algorithm, or adjust
+its parameters, from the Algorithm step.") — rather than a bare empty
+table or a generic "no duplicates" message with no follow-up action
+(resolves OQ-M2-3). This empty state shall be distinguishable in markup
+from AC-M2-21's populated-results case (e.g. a dedicated element/class)
+so the `tester` agent can assert on it directly rather than inferring it
+from an absent table.
 
 ## Backend-agnosticism (reviewer-facing, but testable)
 
@@ -172,56 +229,17 @@ Given the M2 deliverable, no file under `app/algorithms/` shall import
 expected to verify this explicitly per the plan's "Reviewer checks:
 ... algorithms stay backend-agnostic").
 
-## Open Questions
+## Open Questions — Resolved
 
-These are genuine ambiguities in the plan/issue text that the `coder`
-should not resolve by guessing. Ranked by importance (most important
-first) — see final report for the same list surfaced to the user.
+All five open questions originally raised during this BA pass have been
+resolved (decisions relayed by the orchestrating session). Each is now a
+concrete, testable acceptance criterion above rather than an open
+ambiguity. No unresolved open questions remain for M2 as of this update.
 
-1. **OQ-M2-1 (routing): What should `POST /mapping` redirect to once M2
-   ships?** `app/routers/mapping.py` currently has a code comment stating
-   the redirect target changes from `/mapping` to `/algorithm` "once
-   Milestone 2 adds the algorithm-selection step." Neither the plan nor
-   issue #1 explicitly lists changing `mapping.py`'s redirect as M2 scope
-   (issue #1's file list only mentions `algorithm.py`/`results.py` as new
-   files). Should M2 change this existing redirect, or is that deferred
-   to whichever milestone is judged to "complete" the navigation chain?
-   Recommendation: change it now, since otherwise `/algorithm` is
-   unreachable from the normal flow and M2 ships an unreachable feature.
-
-2. **OQ-M2-2 (param input validation): What happens if `n` is submitted
-   as 0, negative, or non-integer to `POST /algorithm`?** Neither the
-   plan nor the issue specifies bounds for `n`. A value of `0` or
-   negative would make "all character n-grams" undefined/empty.
-   Recommendation: validate `n >= 1` (matching `ParamSpec`-declared type
-   `int`), reject otherwise with a 422 + flash error, analogous to
-   M1's mapping-validation pattern. Needs explicit confirmation since
-   it's user-facing validation behavior, not just an internal detail.
-
-3. **OQ-M2-3 (results grouping for key-collision results when nothing
-   matches): What does `GET /results` show when the algorithm produces
-   zero multi-row clusters (e.g. dataset has no duplicates at all)?**
-   Neither the plan nor issue says whether this is an empty table, a
-   specific "no duplicates found" message, or something else.
-   Recommendation: render an explicit empty-state message rather than a
-   bare empty table, but needs UX confirmation.
-
-4. **OQ-M2-4 (n-gram key delimiter / exact key format): The plan
-   describes the n-gram fingerprint key only at the algorithm level
-   ("dedupe -> sort -> join") without specifying the join delimiter or
-   whether it must be stable/human-readable.** This doesn't affect
-   correctness (any deterministic delimiter works, AC-M2-12 above is
-   delimiter-agnostic) but does affect whether the results UI can ever
-   meaningfully display the "key" itself for debugging. Low-importance —
-   flagging in case the coder wants a steer rather than picking
-   arbitrarily.
-
-5. **OQ-M2-5 (distance column in M2's results table): Issue #1 doesn't
-   restate whether `_results_table.html`/`_pair_row.html` (per the plan's
-   project structure section) should already include a `distance` column
-   that is simply blank/`None` for M2's key-collision-only algorithms, or
-   whether that column should not exist in markup until M3 introduces
-   nearest-neighbor algorithms that populate it.** Recommendation: include
-   the column now (rendering blank for key-collision rows) so M3 doesn't
-   need a template restructure, but this is a coder-level UI decision
-   worth a quick confirmation since it touches shared partial templates.
+| # | Topic | Resolution | AC |
+|---|---|---|---|
+| OQ-M2-1 | `POST /mapping` redirect target | Changes to `/algorithm` as part of M2 scope | AC-M2-24 |
+| OQ-M2-2 | `n` parameter validation | Validate `n >= 1`; reject with 422 + flash error otherwise | AC-M2-25 |
+| OQ-M2-3 | Empty-results UX | Explicit message that both states no matches were found and nudges the user toward trying a different algorithm/param | AC-M2-26 |
+| OQ-M2-4 | N-gram key join delimiter | Fixed as hyphen (`"-"`) | AC-M2-12 (updated) |
+| OQ-M2-5 | `distance` column in M2's results table | Include it now, rendered blank for key-collision algorithms; judged not to introduce awkward plumbing since `CandidatePair.distance` already defaults to `None` in the specified data model | AC-M2-21a |

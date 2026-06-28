@@ -25,12 +25,15 @@ arrive in M3).
 ## UAT-M2-1: Fingerprint algorithm groups token-identical addresses
 
 1. Upload the sample CSV above, confirm mapping (Street ->
-   StreetAddress, Zip -> ZipCode).
-2. Navigate to `/algorithm`, select "Fingerprint", submit.
-3. Expect: redirected/rendered to `/results` showing exactly one group
-   containing rows 1 and 2 ("123 Main St" / "St Main 123"); rows 3 and 4
-   appear ungrouped (or not shown, depending on the chosen empty-row
-   UI — see OQ-M2-3).
+   StreetAddress, Zip -> ZipCode), and submit the mapping form.
+2. Expect: submitting the mapping form lands on `/algorithm` directly
+   (not back on `/mapping`) — see AC-M2-24.
+3. On `/algorithm`, select "Fingerprint", submit.
+4. Expect: redirected/rendered to `/results` showing exactly one group
+   containing rows 1 and 2 ("123 Main St" / "St Main 123"), with a blank
+   `distance` cell for that group (key-collision algorithms never
+   populate distance — see AC-M2-21a); rows 3 and 4 do not appear in any
+   group.
 
 ## UAT-M2-2: N-Gram Fingerprint with default n=2 catches the same pair
 
@@ -72,6 +75,27 @@ arrive in M3).
 1. Without uploading anything, navigate directly to `/algorithm`.
 2. Expect: redirected to `/mapping` (or `/`, if no dataset at all),
    not a 500 error.
+
+## UAT-M2-7: Invalid `n` is rejected with a clear error
+
+1. Upload the sample CSV, confirm mapping.
+2. On `/algorithm`, select "N-Gram Fingerprint", set `n` to `0`, submit.
+3. Expect: HTTP 422 (visible as the form re-rendering with a flash error
+   in the browser), the error message indicates `n` must be a positive
+   integer, and no results are computed/persisted from this submission
+   (see AC-M2-25). Repeat with `n = -1` and a non-numeric value (e.g.
+   `abc`) and confirm the same outcome.
+
+## UAT-M2-8: Empty results show an actionable message
+
+1. Upload a CSV where every street address is distinct enough that no
+   algorithm will cluster any rows (e.g. four wildly different
+   addresses, no shared tokens or n-grams).
+2. Confirm mapping, then on `/algorithm` select "Fingerprint", submit.
+3. Expect: `/results` shows no group rows, but does show an explicit
+   message stating no candidate duplicates were found and suggesting the
+   user try a different algorithm or adjust parameters (not a silently
+   bare/empty table) — see AC-M2-26.
 
 ## Sign-off
 
