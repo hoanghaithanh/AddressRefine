@@ -38,6 +38,20 @@ class DatasetVersion:
 
 
 @dataclass
+class CandidatePair:
+    """A group of row indices the matching algorithm believes are duplicates.
+
+    `distance` is `None` for key-collision algorithms (Fingerprint, N-Gram
+    Fingerprint) since they cluster by exact key equality rather than a
+    pairwise distance score. Nearest-neighbor algorithms (later milestones)
+    will populate it.
+    """
+
+    row_indices: list[int]
+    distance: float | None = None
+
+
+@dataclass
 class Session:
     """In-memory session state for a single user's working set.
 
@@ -51,6 +65,9 @@ class Session:
     versions: list[DatasetVersion] = field(default_factory=list)
     mapping: ColumnMapping | None = None
     original_filename: str | None = None
+    algorithm_key: str | None = None
+    algorithm_params: dict[str, Any] = field(default_factory=dict)
+    candidate_pairs: list[CandidatePair] = field(default_factory=list)
 
     @property
     def current_df(self) -> Any:

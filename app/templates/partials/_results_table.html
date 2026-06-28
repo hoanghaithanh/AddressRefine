@@ -1,0 +1,14 @@
+<table class="results-table">
+  <thead>
+    <tr>
+      <th>Candidate addresses</th>
+      <th>Distance</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for group in groups %}
+      {% include "partials/_pair_row.html" %}
+    {% endfor %}
+  </tbody>
+</table>

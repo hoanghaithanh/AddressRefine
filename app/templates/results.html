@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Results — AddressRefine{% endblock %}
+
+{% block content %}
+<h2>Candidate duplicate addresses</h2>
+
+{% if groups %}
+  {% include "partials/_results_table.html" %}
+{% else %}
+  <div class="results-empty-state">
+    <p>
+      No candidate duplicates found with the current algorithm and settings.
+      Try a different algorithm, or adjust its parameters, from the
+      <a href="/algorithm">Algorithm step</a>.
+    </p>
+  </div>
+{% endif %}
+{% endblock %}
