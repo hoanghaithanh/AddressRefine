@@ -45,7 +45,14 @@ ruff format --check .              # format check
 
 ## Workflow
 
-This project is built milestone-by-milestone (see the plan file above for the full breakdown: M1 scaffold+upload+mapping, M2 key-collision algorithms, M3 nearest-neighbor algorithms+blocking, M4 review/merge, M5 export+CI). Each milestone goes through a coder pass, then a tester pass, then a senior-dev review pass before moving to the next one.
+This project is built milestone-by-milestone (see the plan file above for the full breakdown: M1 scaffold+upload+mapping, M2 key-collision algorithms, M3 nearest-neighbor algorithms+blocking, M4 review/merge, M5 export+CI). From M2 onward, each milestone goes through a four-step loop, each with its own custom subagent in `.claude/agents/`:
+
+1. **`business-analyst`** — authors/updates the requirements documentation under `docs/ba/` (BRD, FRD, data dictionary, process/use-case/data-flow diagrams, product backlog, user stories, acceptance criteria, traceability matrix, UAT plan) for the milestone. Surfaces open questions for the orchestrating session to put to the user. Never touches application code or GitHub directly.
+2. **`coder`** — implements the milestone, informed by that milestone's acceptance criteria.
+3. **`tester`** — writes/runs tests against what the coder built.
+4. **`reviewer`** — senior-dev review pass, findings only.
+
+The orchestrating session folds the BA's acceptance criteria into the milestone's GitHub issue body before the coder pass starts. M1 predates this process — it went straight through coder → tester → reviewer, and its `docs/ba/` artifacts were backfilled retroactively rather than written up front.
 
 ## GitHub repo conventions
 
