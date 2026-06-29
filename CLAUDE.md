@@ -48,9 +48,14 @@ ruff format --check .              # format check
 This project is built milestone-by-milestone (see the plan file above for the full breakdown: M1 scaffold+upload+mapping, M2 key-collision algorithms, M3 nearest-neighbor algorithms+blocking, M4 review/merge, M5 export+CI). From M2 onward, each milestone goes through a four-step loop, each with its own custom subagent in `.claude/agents/`:
 
 1. **`business-analyst`** — authors/updates the requirements documentation under `docs/ba/` (BRD, FRD, data dictionary, process/use-case/data-flow diagrams, product backlog, user stories, acceptance criteria, traceability matrix, UAT plan) for the milestone. Surfaces open questions for the orchestrating session to put to the user. Never touches application code or GitHub directly.
-2. **`coder`** — implements the milestone, informed by that milestone's acceptance criteria.
-3. **`tester`** — writes/runs tests against what the coder built.
-4. **`reviewer`** — senior-dev review pass, findings only.
+2. **`coder`** — implements the milestone, informed by that milestone's acceptance criteria. Reports any mid-implementation ambiguities as **Escalations** in its final report rather than guessing silently.
+3. **`tester`** — writes/runs tests against what the coder built. Fixes minor bugs directly; marks non-minor bugs as `xfail` and flags them as **Coder return trip needed** in its report.
+4. **`reviewer`** — senior-dev review pass. Splits findings into **Must fix (route to coder)** and **Informational (no return trip needed)**.
+
+**Feedback loops** — the orchestrating session handles routing:
+- **Coder escalation → BA/user**: if the coder reports an Escalation, the orchestrating session puts it to the user (or BA) before the tester pass starts.
+- **Tester → Coder**: if the tester reports "Coder return trip needed" items, the orchestrating session re-engages the coder with the specific bugs before moving to the reviewer.
+- **Reviewer → Coder**: if the reviewer reports "Must fix" findings, the orchestrating session re-engages the coder with those findings before merging. Informational findings do not trigger a return trip.
 
 The orchestrating session folds the BA's acceptance criteria into the milestone's GitHub issue body before the coder pass starts. M1 predates this process — it went straight through coder → tester → reviewer, and its `docs/ba/` artifacts were backfilled retroactively rather than written up front.
 

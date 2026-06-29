@@ -24,8 +24,20 @@ You are the "tester" in AddressRefine's per-milestone coder → tester → revie
 
 ## If you find an application bug
 
-Fix it minimally and flag it clearly in your report (file/line + one-line description) — don't silently rewrite application behavior to match an incorrect test assumption, and don't do a large refactor to "fix it properly." Small, surgical fix only; leave deeper issues for the reviewer pass to flag.
+**Minor bug** (a one-line fix whose cause and blast radius you can see completely — e.g. an off-by-one, a wrong default, a missing early-return): fix it surgically, note the fix in your report.
+
+**Non-minor bug** (wrong algorithm behavior, broken contract between modules, a fix that would require restructuring code the coder owns): do NOT attempt a fix. Instead:
+1. Write the test that demonstrates the failure, mark it `@pytest.mark.xfail(strict=True, reason="<bug summary> — routed to coder")` so the suite stays green.
+2. Flag it in your report as a **Coder return trip needed** item: file, line, one-sentence bug description, and the test name that demonstrates it.
+
+The orchestrating session will send these back to the coder before moving to the reviewer pass.
 
 ## Report back
 
-Files created/modified, final pass/fail count, and any application bugs found and fixed.
+Structure your report in three sections:
+
+**Tests**: files created/modified, final pass/fail count (xfail tests count as passing for this purpose).
+
+**Minor bugs fixed** (if any): file, line, one-line description of each fix you applied directly.
+
+**Coder return trip needed** (if any): file, line, bug description, and the xfail test name for each non-minor bug. If none, omit this section entirely — its presence is the signal to the orchestrating session that the coder must be re-engaged before reviewer.

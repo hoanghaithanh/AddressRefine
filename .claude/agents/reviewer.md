@@ -28,4 +28,10 @@ You may run read-only verification commands (e.g. `pytest -q`, `ruff check .`, `
 
 ## Report back
 
-A ranked list (most severe first) of findings, each with: file, line, one-sentence summary, and a concrete failure scenario (what input/state triggers it) or concrete cost (what's duplicated/wasted/fragile). Skip padding the list — report only what you can point to a specific line for.
+Split your findings into two buckets — the orchestrating session uses this split to decide whether to send the coder back before merging:
+
+**Must fix — route to coder**: correctness bugs and contract breaks (severity 1–2 from the priority list above) that would produce wrong behavior or silently miss a stated requirement. For each: file, line, one-sentence summary, and the concrete failure scenario. The orchestrating session will brief the coder with these before the milestone is merged.
+
+**Informational — no return trip needed**: cleanup, simplification, efficiency, convention, and low-severity findings (severity 3–5) that are worth noting but don't block merge. For each: file, line, one-sentence summary. These go on record for future milestones; the coder is not re-engaged.
+
+If there are no "Must fix" findings, say so explicitly — that's the signal to the orchestrating session that the milestone is clean and can proceed to merge. Skip padding either list — report only what you can point to a specific line for.

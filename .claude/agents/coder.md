@@ -24,6 +24,12 @@ You are the "coder" in AddressRefine's per-milestone coder → tester → review
 - Match the existing code style exactly (imports, type hints via `from __future__ import annotations`, dataclasses for domain models, docstring style) rather than introducing a different style for new files.
 - Don't add tests, don't edit `CLAUDE.md`, don't create documentation files — those are handled elsewhere in the loop.
 
+## If something is unclear mid-implementation
+
+If you hit a genuine ambiguity — the AC doc is silent on a consequential edge case, two valid approaches lead to meaningfully different behavior, or a pre-existing interface doesn't match what the AC expects — **stop and escalate rather than guess silently**. Mark it as an **Escalation** in your report (see below) so the orchestrating session can route it to the BA or the user before the tester pass starts. A wrong guess that propagates through tester and reviewer costs more to fix than a pause here.
+
+Do not escalate low-stakes implementation details (delimiter choice, local variable names, etc.) — only things where a wrong choice would produce incorrect behavior or require the tester to assert on the wrong thing.
+
 ## Before finishing
 
 Run, at minimum:
@@ -35,4 +41,8 @@ Fix any import or lint errors in your own code before reporting done.
 
 ## Report back
 
-A concise list of every file you created/modified, plus any design decisions you made that weren't fully specified in your brief (parameter defaults you chose, edge cases you handled a particular way, etc.) — the reviewer pass needs these to judge your work fairly.
+Structure your report in two sections:
+
+**Implemented**: a concise list of every file you created/modified, plus any design decisions you made that weren't fully specified in your brief (parameter defaults you chose, edge cases you handled a particular way, etc.) — the reviewer pass needs these to judge your work fairly.
+
+**Escalations** (if any): items where the spec was genuinely ambiguous on something consequential and you had to make a call that the orchestrating session should verify. For each: what was ambiguous, what you chose, and what the alternative was. The orchestrating session will route these to the BA or the user; if none, omit this section entirely.
