@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Algorithm — AddressRefine{% endblock %}
+
+{% block content %}
+<h2>Choose a matching algorithm</h2>
+<p>Pick an algorithm to find candidate duplicate addresses in your dataset.</p>
+
+<form method="post" action="/algorithm" class="algorithm-form">
+  <label for="algorithm_key">Algorithm</label>
+  <select id="algorithm_key" name="algorithm_key" required>
+    {% for algo in algorithms %}
+      <option value="{{ algo.key }}" {% if algo.key == selected_key %}selected{% endif %}>{{ algo.label }}</option>
+    {% endfor %}
+  </select>
+
+  <label for="n">N-gram size (N-Gram Fingerprint only)</label>
+  <input
+    type="number"
+    id="n"
+    name="n"
+    min="1"
+    step="1"
+    value="{{ algorithm_params.n if algorithm_params and algorithm_params.n else 2 }}"
+  >
+
+  <button type="submit">Run matching</button>
+</form>
+{% endblock %}

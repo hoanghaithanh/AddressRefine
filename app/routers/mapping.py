@@ -119,6 +119,4 @@ async def mapping_submit(
         country_col=form.country_col,
     )
 
-    # NOTE: redirects back to "/mapping" for now. Milestone 2 will change this
-    # target to "/algorithm" once the algorithm-selection step exists.
-    return RedirectResponse(url="/mapping", status_code=303)
+    return RedirectResponse(url="/algorithm", status_code=303)

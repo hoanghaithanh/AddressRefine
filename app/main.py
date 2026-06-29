@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
-from app.routers import mapping, upload
+from app.routers import algorithm, mapping, results, upload
 
 
 def create_app() -> FastAPI:
@@ -42,6 +42,8 @@ def create_app() -> FastAPI:
 
     app.include_router(upload.router)
     app.include_router(mapping.router)
+    app.include_router(algorithm.router)
+    app.include_router(results.router)
 
     return app
 

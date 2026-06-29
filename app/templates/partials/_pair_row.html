@@ -1,0 +1,24 @@
+<tr class="pair-row">
+  <td>
+    <ul class="pair-row-addresses">
+      {% for row in group.rows %}
+        <li>
+          <span class="pair-row-index">#{{ row.row_index }}</span>
+          {{ row.columns.street }}
+          {% if row.columns.city %}, {{ row.columns.city }}{% endif %}
+          {% if row.columns.zip %} {{ row.columns.zip }}{% endif %}
+          {% if row.columns.country %}, {{ row.columns.country }}{% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  </td>
+  <td class="pair-row-distance">
+    {% if group.distance is not none %}{{ group.distance }}{% else %}&mdash;{% endif %}
+  </td>
+  <td class="pair-row-actions">
+    <!-- Accept/Reject controls are present but inert in M2: there is no
+         working POST /results/* handler yet, so these submit nothing. -->
+    <button type="button" disabled>Accept</button>
+    <button type="button" disabled>Reject</button>
+  </td>
+</tr>

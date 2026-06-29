@@ -37,7 +37,8 @@ def test_get_mapping_after_upload_shows_headers_with_best_guess_selected(client)
     assert '<option value="Country" selected>' in text
 
 
-def test_post_mapping_valid_redirects(client):
+def test_post_mapping_valid_redirects_to_algorithm(client):
+    """AC-M2-24: a valid mapping submission now redirects to /algorithm, not /mapping."""
     _upload_sample(client)
 
     response = client.post(
@@ -47,7 +48,7 @@ def test_post_mapping_valid_redirects(client):
     )
 
     assert response.status_code == 303
-    assert response.headers["location"] == "/mapping"
+    assert response.headers["location"] == "/algorithm"
 
 
 def test_post_mapping_street_col_not_a_real_header_returns_422(client):

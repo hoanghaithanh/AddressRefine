@@ -13,8 +13,8 @@
     <nav class="stepper">
       <span class="step {% if active_step == 'upload' %}current{% endif %}">1. Upload</span>
       <span class="step {% if active_step == 'mapping' %}current{% endif %}">2. Mapping</span>
-      <span class="step step-future">3. Algorithm</span>
-      <span class="step step-future">4. Results</span>
+      <span class="step {% if active_step == 'algorithm' %}current{% endif %}">3. Algorithm</span>
+      <span class="step {% if active_step == 'results' %}current{% endif %}">4. Results</span>
     </nav>
   </header>
 
