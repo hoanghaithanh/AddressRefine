@@ -57,7 +57,53 @@ expected to produce, and current status.
 | FR-3.4 | AC-M2-25 | `tests/test_routers/test_algorithm.py::test_post_algorithm_invalid_n_zero_returns_422`, `::test_post_algorithm_invalid_n_negative_returns_422`, `::test_post_algorithm_invalid_n_non_integer_returns_422`, `::test_post_algorithm_invalid_n_does_not_persist_or_run_matching` | Done |
 | FR-5.1 | AC-M2-26 | `tests/test_routers/test_results.py::test_get_results_empty_state_suggests_next_action` | Done |
 
-## M3-M5
+## M3 — Levenshtein + NCD/PPM Algorithms + Blocking (in progress)
+
+| Requirement | Acceptance Criteria | Test file/case | Status |
+|---|---|---|---|
+| FR-4.5 | AC-M3-1 | `tests/test_algorithms/test_blocking.py::test_compute_blocks_groups_by_zip_prefix` | Planned |
+| FR-4.5 | AC-M3-2 | `tests/test_algorithms/test_blocking.py::test_compute_blocks_uses_full_zip_when_shorter_than_3_chars` | Planned |
+| FR-4.5 | AC-M3-3 | `tests/test_algorithms/test_blocking.py::test_compute_blocks_falls_back_to_city_when_zip_blank` | Planned |
+| FR-4.5 | AC-M3-4 | `tests/test_algorithms/test_blocking.py::test_compute_blocks_unblocked_bucket_when_no_zip_or_city` | Planned |
+| FR-4.5 | AC-M3-5 | `tests/test_algorithms/test_blocking.py::test_compute_blocks_normalizes_whitespace_and_case` | Planned |
+| FR-4.3, FR-4.5 | AC-M3-6 | `tests/test_algorithms/test_backend_agnosticism.py::test_algorithms_file_does_not_import_pandas` (extended to cover `blocking.py`) | Planned |
+| FR-4.6 | AC-M3-7 | `tests/test_algorithms/test_ncd.py::test_ncd_identical_strings_is_zero` | Planned |
+| FR-4.6 | AC-M3-8 | `tests/test_algorithms/test_ncd.py::test_ncd_dissimilar_strings_is_high` | Planned |
+| FR-4.6 | AC-M3-9 | `tests/test_algorithms/test_ncd.py::test_ncd_is_symmetric` | Planned |
+| FR-4.6 | AC-M3-10 | `tests/test_algorithms/test_ncd.py::test_ncd_two_empty_strings_is_zero` | Planned |
+| FR-3.5 | AC-M3-11 | `tests/test_algorithms/test_registry.py::test_list_algorithms_includes_levenshtein_and_ncd` | Planned |
+| FR-3.5 | AC-M3-12 | `tests/test_algorithms/test_levenshtein_nn.py::test_levenshtein_threshold_param_spec` | Planned |
+| FR-4.7 | AC-M3-13 | `tests/test_algorithms/test_levenshtein_nn.py::test_levenshtein_pairs_rows_within_threshold` | Planned |
+| FR-4.7 | AC-M3-14 | `tests/test_algorithms/test_levenshtein_nn.py::test_levenshtein_does_not_pair_rows_above_threshold` | Planned |
+| FR-4.7 | AC-M3-15 | `tests/test_algorithms/test_levenshtein_nn.py::test_levenshtein_threshold_zero_matches_only_identical` | Planned |
+| FR-4.5, FR-4.7 | AC-M3-16 | `tests/test_algorithms/test_levenshtein_nn.py::test_levenshtein_respects_block_boundaries` | Planned |
+| FR-4.7 | AC-M3-17 | `tests/test_algorithms/test_levenshtein_nn.py::test_levenshtein_uses_rapidfuzz_score_cutoff` | Planned |
+| FR-3.5 | AC-M3-18 | `tests/test_algorithms/test_registry.py::test_list_algorithms_includes_levenshtein_and_ncd` (same parametrized test covers both) | Planned |
+| FR-3.5 | AC-M3-19 | `tests/test_algorithms/test_ncd_algorithm.py::test_ncd_algorithm_threshold_param_spec` | Planned |
+| FR-4.6 | AC-M3-20 | `tests/test_algorithms/test_ncd_algorithm.py::test_ncd_algorithm_ui_threshold_scaled_internally` | Planned |
+| FR-4.6 | AC-M3-21 | `tests/test_algorithms/test_ncd_algorithm.py::test_ncd_algorithm_pairs_rows_within_threshold` | Planned |
+| FR-4.6 | AC-M3-22 | `tests/test_algorithms/test_ncd_algorithm.py::test_ncd_algorithm_does_not_pair_rows_above_threshold` | Planned |
+| FR-4.5, FR-4.6 | AC-M3-23 | `tests/test_algorithms/test_ncd_algorithm.py::test_ncd_algorithm_respects_block_boundaries` | Planned |
+| FR-4.4, FR-4.5 | AC-M3-24 | `tests/test_services/test_matching_service.py::test_run_matching_calls_extract_columns_for_nn_algorithm` | Planned |
+| FR-4.4 | AC-M3-25 | `tests/test_services/test_matching_service.py::test_run_matching_passes_none_blocks_to_key_collision_algorithm` | Planned |
+| FR-4.4 | AC-M3-26 | `tests/test_services/test_matching_service.py::test_union_find_merges_transitive_pairs_into_one_cluster` | Planned |
+| FR-4.4 | AC-M3-27 | `tests/test_services/test_matching_service.py::test_candidate_pair_distance_is_max_pairwise_distance` | Planned |
+| FR-4.4 | AC-M3-28 | `tests/test_services/test_matching_service.py::test_candidate_pairs_have_unique_pair_ids` | Planned |
+| FR-4.1 | AC-M3-29 | `tests/test_services/test_matching_service.py::test_run_matching_rebuilds_candidate_pairs_from_scratch_nn_path` | Planned |
+| FR-4.4 | AC-M3-30 | `tests/test_algorithms/test_base.py::test_candidate_pair_has_pair_id_field` | Planned |
+| FR-3.5, FR-3.4 | AC-M3-31 | `tests/test_routers/test_algorithm.py::test_post_algorithm_levenshtein_threshold_zero_accepted` | Planned |
+| FR-3.5, FR-3.4 | AC-M3-32 | `tests/test_routers/test_algorithm.py::test_post_algorithm_levenshtein_negative_threshold_rejected`, `::test_post_algorithm_levenshtein_non_integer_threshold_rejected` | Planned |
+| FR-3.5, FR-3.4 | AC-M3-33 | `tests/test_routers/test_algorithm.py::test_post_algorithm_ncd_threshold_in_range_accepted` | Planned |
+| FR-3.5, FR-3.4 | AC-M3-34 | `tests/test_routers/test_algorithm.py::test_post_algorithm_ncd_threshold_zero_rejected` | Planned |
+| FR-3.5, FR-3.4 | AC-M3-35 | `tests/test_routers/test_algorithm.py::test_post_algorithm_ncd_threshold_above_10_rejected` | Planned |
+| FR-3.5, FR-3.4 | AC-M3-36 | `tests/test_routers/test_algorithm.py::test_post_algorithm_fingerprint_ignores_threshold` | Planned |
+| FR-3.5 | AC-M3-37 | `tests/test_routers/test_algorithm.py::test_get_algorithm_renders_threshold_input` | Planned |
+| FR-5.1 | AC-M3-38 | `tests/test_routers/test_results.py::test_get_results_shows_edit_distance_sub_label_for_levenshtein` | Planned |
+| FR-5.1 | AC-M3-39 | `tests/test_routers/test_results.py::test_get_results_shows_ncd_score_sub_label_for_ncd` | Planned |
+| FR-5.1 | AC-M3-40 | `tests/test_routers/test_results.py::test_get_results_no_nn_sub_label_for_key_collision` | Planned |
+| FR-4.3 | AC-M3-41 | `tests/test_algorithms/test_backend_agnosticism.py::test_algorithms_file_does_not_import_pandas` (parametrized to include `blocking.py`, `ncd.py`, `nearest_neighbor.py`) | Planned |
+
+## M4-M5
 
 Not yet authored — to be added by the BA pass that runs before each of
 those milestones' `coder` passes start.

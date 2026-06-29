@@ -1,9 +1,9 @@
 # Functional Requirements Document — AddressRefine
 
-Status: Living document. Last revised: M2 BA pass (2026-06-28). Reflects
-functionality shipped through M1 plus functionality planned for M2; later
-milestones (M3-M5) are described at the level of detail available in the
-plan and will be filled in/corrected as each ships.
+Status: Living document. Last revised: M3 BA pass (2026-06-29). Reflects
+functionality shipped through M2 plus M3 requirements now fully specified;
+M4-M5 are described at the level of detail available in the plan and will
+be filled in/corrected as each milestone's BA pass runs.
 
 Each functional requirement (FR) is referenced from `traceability-matrix.md`
 and from the relevant milestone's acceptance-criteria file.
@@ -27,7 +27,7 @@ and from the relevant milestone's acceptance-criteria file.
   session's sole version, clear any prior `session.mapping`, and redirect
   to `/mapping` (HTTP 303).
 
-## FR-2 — Column Mapping (shipped, M1)
+## FR-2 — Column Mapping (shipped, M1; FR-2.6 redirect target updated M2)
 
 - **FR-2.1**: The system shall render a mapping form (`GET /mapping`)
   listing the uploaded CSV's headers as options for four logical fields:
@@ -51,15 +51,14 @@ and from the relevant milestone's acceptance-criteria file.
   check applies uniformly to all four fields, not just `street_col`.
 - **FR-2.6**: On successful validation, the system shall persist a
   `ColumnMapping(street_col, zip_col, city_col, country_col)` onto
-  `session.mapping` and redirect back to `/mapping` (HTTP 303). (Per a
-  code comment in `app/routers/mapping.py`, this redirect target changes to
-  `/algorithm` once M2 adds the algorithm-selection step — see open
-  question OQ-M2-1 in `acceptance-criteria/m2-fingerprint-algorithms.md`.)
+  `session.mapping` and redirect to `/algorithm` (HTTP 303). (Redirect
+  target updated from `/mapping` to `/algorithm` in M2 per OQ-M2-1;
+  see `acceptance-criteria/m2-fingerprint-algorithms.md` AC-M2-24.)
 - **FR-2.7**: If `GET /mapping` or `POST /mapping` is requested with no
   dataset in the session (`session.current_df is None`), the system shall
   redirect to `/` (HTTP 303).
 
-## FR-3 — Algorithm Selection (M2, planned)
+## FR-3 — Algorithm Selection (M2 shipped; FR-3.5 added M3)
 
 - **FR-3.1**: The system shall expose a registry of available matching
   algorithms (`app/algorithms/registry.py`, `ALGORITHM_REGISTRY`,
@@ -69,54 +68,89 @@ and from the relevant milestone's acceptance-criteria file.
   its configurable parameters (`ParamSpec`).
 - **FR-3.2**: `GET /algorithm` shall render a form letting the user choose
   one of the registered algorithms and, for the selected algorithm, its
-  parameters (default values per `ParamSpec`).
+  parameters (default values per `ParamSpec`). As of M3, the form shall
+  also include a `threshold` input field shown/hidden via Jinja conditional
+  based on algorithm family (visible for NN algorithms, hidden for
+  key-collision algorithms).
 - **FR-3.3**: As of M2, the registry shall contain exactly two algorithms,
   both key-collision family: Fingerprint (no parameters) and N-Gram
   Fingerprint (parameter `n`, default `2`).
 - **FR-3.4**: `POST /algorithm` shall validate and persist the chosen
-  algorithm key + params onto `session.algorithm_params`
-  (`AlgorithmParams(algorithm_key, params)`), then trigger matching (see
-  FR-4) and redirect/render to the results view.
-- **FR-3.5 (M3, not yet built)**: Levenshtein Distance (parameter
-  `threshold`, default `3`) and PPM/NCD (UI-displayed parameter
-  `threshold`, default `3`, internally scaled `actual_threshold =
-  ui_threshold / 10.0`) shall be added to the registry as nearest-neighbor
-  family algorithms.
+  algorithm key + params onto `session.algorithm_params`, then trigger
+  matching (see FR-4) and redirect to `/results` (HTTP 303). Per-algorithm
+  validation rules: `n >= 1` for N-Gram Fingerprint (M2); `threshold >= 0`
+  (int) for Levenshtein; `threshold` in `[1, 10]` (int) for NCD (M3).
+  Invalid params render the form again with HTTP 422 and a flash error
+  without persisting or running matching.
+- **FR-3.5 (M3)**: Levenshtein Distance (key `"levenshtein"`, label
+  `"Levenshtein Distance"`, parameter `threshold` default `3`, valid range
+  `>= 0`) and PPM/NCD (key `"ncd"`, label `"PPM / NCD"`, parameter
+  `threshold` default `3`, valid UI range `[1, 10]`, internally scaled to
+  `ui_threshold / 10.0`) shall be added to the registry as
+  `AlgorithmFamily.NEAREST_NEIGHBOR` algorithms.
 
-## FR-4 — Matching Execution (M2 partial, M3 complete)
+## FR-4 — Matching Execution (M2 partial; M3 completes NN path)
 
-- **FR-4.1**: `matching_service.run_matching(session, backend)` shall
-  extract street addresses via
-  `ComputeBackend.extract_street_addresses(frame, mapping)` (returning
-  `dict[int, str]`), run the selected algorithm against that dict, and
-  rebuild `session.candidate_pairs` from scratch on every invocation (no
-  carry-over of prior accept/reject state across reruns).
-- **FR-4.2 (M2 scope)**: For key-collision algorithms (Fingerprint, N-Gram
-  Fingerprint), rows whose computed key collides are grouped into a
-  cluster; clusters of size 1 (no collision partner) produce no candidate
-  pair.
-- **FR-4.3 (M2 scope)**: Algorithms must never receive or return a
+- **FR-4.1**: `matching_service.run_matching(session)` shall extract street
+  addresses via `ComputeBackend.extract_street_addresses(frame, mapping)`
+  (returning `dict[int, str]`), run the selected algorithm, and rebuild
+  `session.candidate_pairs` from scratch on every invocation (no carry-over
+  of prior accept/reject state across reruns). Each resulting `CandidatePair`
+  is assigned a unique `pair_id` (uuid4 string) at construction time (M3).
+- **FR-4.2 (M2 scope, shipped)**: For key-collision algorithms (Fingerprint,
+  N-Gram Fingerprint), rows whose computed key collides are grouped into a
+  cluster; clusters of size 1 produce no candidate pair.
+- **FR-4.3 (M2 scope, shipped)**: Algorithms must never receive or return a
   DataFrame — only `dict[int, str]` in, `AlgorithmOutput` (clusters or
-  pairs) out — preserving the `compute/` vs `algorithms/` seam described in
-  `CLAUDE.md`.
-- **FR-4.4 (M3, not yet built)**: For nearest-neighbor algorithms
-  (Levenshtein, NCD), rows shall first be partitioned into blocks
-  (`compute_blocks`) and compared only within a block; resulting pairs
-  under threshold are merged into clusters via union-find so both
-  algorithm families render through the same results template.
+  pairs) out. No file under `app/algorithms/` may import `pandas`.
+- **FR-4.4 (M3)**: For nearest-neighbor algorithms (Levenshtein, NCD),
+  `run_matching` shall call `ComputeBackend.extract_columns(frame, mapping)`
+  to obtain per-row zip and city values, pass the result to `compute_blocks`
+  (see FR-4.5) to partition rows into blocks, then run the NN algorithm
+  (which compares only within-block pairs), convert the resulting
+  `AlgorithmOutput.pairs` into clusters via union-find, and build one
+  `CandidatePair` per cluster. The `distance` field of each `CandidatePair`
+  shall be set to the maximum pairwise distance among all members of that
+  cluster. Key-collision algorithms continue to receive `blocks=None`.
+- **FR-4.5 (M3)**: `algorithms/blocking.py` shall expose
+  `compute_blocks(rows: dict[int, dict[str, str]]) -> dict[str, list[int]]`.
+  Block key construction: if the row's `"zip"` value is non-blank after
+  stripping whitespace and lowercasing, the block key is the first 3
+  characters of that normalized zip (or the full string if shorter than 3
+  characters). Otherwise, if `"city"` is non-blank after normalization, the
+  block key is the normalized city string. Otherwise, the block key is
+  `"__unblocked__"`. This function is a pure function over plain dicts —
+  it does not import `pandas` or receive a `ColumnMapping`.
+- **FR-4.6 (M3)**: `algorithms/ncd.py` shall expose
+  `normalized_compression_distance(a: str, b: str) -> float` using
+  `bz2.compress` lengths with both concatenation orders averaged for
+  symmetry: `((C(a+b)-min(Ca,Cb))/max(Ca,Cb) + (C(b+a)-min(Ca,Cb))/max(Ca,Cb)) / 2`.
+  Two empty strings shall return `0.0`. This function is used internally by
+  `NCDAlgorithm` and may be used independently in tests.
+- **FR-4.7 (M3)**: `LevenshteinNNAlgorithm` shall use
+  `rapidfuzz.distance.Levenshtein.distance(a, b, score_cutoff=threshold)`
+  for efficiency. Pairs where the distance exceeds `threshold` are not
+  included in `AlgorithmOutput.pairs`. Comparisons are only performed
+  within the blocks provided by the `blocks` argument.
 
-## FR-5 — Results View (M2 read-only, M4 interactive)
+## FR-5 — Results View (M2 read-only; M3 adds distance scale label; M4 interactive)
 
-- **FR-5.1 (M2 scope)**: `GET /results` shall render the current
-  `session.candidate_pairs` (one row/group per cluster) as a read-only
-  table: matched rows' street-address values, and (for nearest-neighbor
-  results in later milestones) a distance value. Accept/reject controls
-  shall be present in markup but inert (no working POST handler yet) per
-  the M2 issue's explicit "checkboxes inert" instruction.
+## FR-5 — Results View (M2 read-only; M3 adds distance scale label; M4 interactive)
+
+- **FR-5.1 (M2 shipped; M3 extends)**: `GET /results` shall render the
+  current `session.candidate_pairs` (one row/group per cluster) as a
+  read-only table: matched rows' street-address values, a distance column,
+  and inert accept/reject controls. As of M3, when the current algorithm is
+  a nearest-neighbor algorithm, the page shall display a scale sub-label
+  near the "Distance" column header: `"edit distance"` for Levenshtein and
+  `"NCD score (0–1)"` for NCD. For key-collision algorithms (Fingerprint,
+  N-Gram Fingerprint), no sub-label is shown and distance continues to
+  render as `"—"` per pair.
 - **FR-5.2 (M4, not yet built)**: `POST
   /results/pair/{id}/accept|reject|representative` shall mutate that
-  specific `CandidatePair`'s `status`/representative fields and return
-  just that row's HTML fragment (no full-page reload), via HTMX.
+  specific `CandidatePair`'s `status`/representative fields (using
+  `pair_id` from M3 to address the pair) and return just that row's HTML
+  fragment (no full-page reload), via HTMX.
 
 ## FR-6 — Merge and Rerun (M4, not yet built)
 
