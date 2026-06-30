@@ -43,10 +43,14 @@ class CandidatePair:
 
     `distance` is `None` for key-collision algorithms (Fingerprint, N-Gram
     Fingerprint) since they cluster by exact key equality rather than a
-    pairwise distance score. Nearest-neighbor algorithms (later milestones)
-    will populate it.
+    pairwise distance score. Nearest-neighbor algorithms populate it with the
+    maximum pairwise distance in the cluster.
+
+    `pair_id` is a UUID4 string assigned by `matching_service` at construction
+    time and is unique across all pairs in a single matching run.
     """
 
+    pair_id: str
     row_indices: list[int]
     distance: float | None = None
 

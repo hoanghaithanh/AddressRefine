@@ -9,10 +9,13 @@ from __future__ import annotations
 
 from app.algorithms.base import MatchingAlgorithm
 from app.algorithms.fingerprint import FingerprintAlgorithm, NGramFingerprintAlgorithm
+from app.algorithms.nearest_neighbor import LevenshteinNNAlgorithm, NCDAlgorithm
 
 _ALGORITHMS: list[MatchingAlgorithm] = [
     FingerprintAlgorithm(),
     NGramFingerprintAlgorithm(),
+    LevenshteinNNAlgorithm(),
+    NCDAlgorithm(),
 ]
 
 _ALGORITHMS_BY_KEY: dict[str, MatchingAlgorithm] = {algo.key: algo for algo in _ALGORITHMS}

@@ -53,7 +53,9 @@ def test_run_matching_rebuilds_candidate_pairs_from_scratch():
     session.algorithm_key = "fingerprint"
 
     # Pre-populate candidate_pairs with a stale entry that should be wiped.
-    session.candidate_pairs = [CandidatePair(row_indices=[99, 100], distance=None)]
+    session.candidate_pairs = [
+        CandidatePair(pair_id="stale-id", row_indices=[99, 100], distance=None)
+    ]
 
     run_matching(session)
 

@@ -2,7 +2,17 @@
   <thead>
     <tr>
       <th>Candidate addresses</th>
-      <th>Distance</th>
+      <th>
+        Distance
+        {# Per-algorithm sub-label for the distance column scale.
+           Key-collision algorithms (fingerprint, ngram_fingerprint) show no sub-label
+           because they don't produce a numeric distance — cells show "—". #}
+        {% if algorithm_key == "levenshtein" %}
+          <span class="distance-sublabel">(edit distance)</span>
+        {% elif algorithm_key == "ncd" %}
+          <span class="distance-sublabel">(NCD score 0–1)</span>
+        {% endif %}
+      </th>
       <th>Actions</th>
     </tr>
   </thead>
