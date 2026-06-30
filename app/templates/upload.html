@@ -6,8 +6,8 @@
 <h2>Upload your address CSV</h2>
 <p>Choose a CSV file containing the addresses you want to de-duplicate.</p>
 
-<form method="post" action="/upload" enctype="multipart/form-data" class="upload-form">
-  <input type="file" name="file" accept=".csv" required>
-  <button type="submit">Upload</button>
+<form method="post" action="/upload" enctype="multipart/form-data" class="upload-form form-panel">
+  <input type="file" name="file" accept=".csv" required class="field">
+  <button type="submit" class="btn btn-primary">Upload</button>
 </form>
 {% endblock %}
