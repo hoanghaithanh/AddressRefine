@@ -1,15 +1,17 @@
 # Business Requirements Document — AddressRefine
 
-Status: Living document. Last revised: M2 BA pass (2026-06-28).
+Status: Living document. Last revised: M4 BA pass (2026-06-30).
 
 ## 1. Purpose
 
 AddressRefine lets a user upload a CSV of address records and find rows that
 describe the same real-world address despite differences in formatting
 (e.g. `"123-3 king st"` vs `"3 king street, unit 123"`). The user reviews
-candidate matches, optionally accepts/rejects them, picks a representative
-value per accepted group, merges, and the app rewrites the dataset and
-reruns matching. This document captures the business problem and goals;
+candidate matches in a single combined algorithm-and-results view (modeled
+on OpenRefine's cluster/merge dialog), checks the pairs they want merged,
+optionally edits the merged value per pair, and triggers a merge — the app
+rewrites the dataset, appends a new version, and reruns matching
+automatically. This document captures the business problem and goals;
 `frd.md` translates these goals into concrete functional behavior.
 
 ## 2. Business Problem
@@ -32,7 +34,13 @@ scale past a few hundred rows.
   edit-distance/compression-based comparison); the user should be able to
   pick and re-pick without re-uploading.
 - **G3 — Keep humans in control of merges.** No row is silently merged
-  without an explicit accept + representative-value choice from the user.
+  without the user explicitly checking that pair's "Merge?" box and
+  clicking "Merge selected & re-cluster." There is no implicit
+  accept/reject/pending status carried between recomputes (revised in M4 —
+  see `frd.md` FR-6 and `data-dictionary.md` for the dropped status model);
+  the checked/unchecked state of the live results table is the only
+  control surface, and conflicting merge targets are blocked outright
+  rather than silently resolved.
 - **G4 — Produce a usable cleaned-up export.** The end output is a CSV the
   user can take back into their own systems.
 - **G5 — Stay operable as a lightweight, self-hosted tool.** No database,
@@ -51,10 +59,17 @@ scale past a few hundred rows.
   selectable with their own parameters.
 - Blocking (zip-prefix / city fallback) to keep nearest-neighbor matching
   tractable on larger datasets.
-- A results view where candidate matches are listed, can be accepted or
-  rejected, and a representative value chosen per accepted group.
-- Merge: rewriting the working dataset with representative values and
-  rerunning matching on the result.
+- A single combined algorithm-selection-and-results view (replacing the
+  earlier separate "algorithm" and "results" wizard pages from M4 onward)
+  where every result row is exactly one pair of two candidate addresses,
+  selecting a row checks it for merge and lets the user edit the merged
+  value, and any change to the algorithm/distance-function/parameter
+  controls live-recomputes the table.
+- Merge: for every checked pair, rewriting both underlying dataset rows to
+  that pair's current edited value, appending a new dataset version, and
+  rerunning matching on the result. Merges that would write conflicting
+  values to the same underlying row are blocked with a validation error
+  rather than silently resolved.
 - CSV export of the current dataset state at any point.
 - Continuous integration (lint + tests) from M5 onward.
 
@@ -85,8 +100,9 @@ scale past a few hundred rows.
 - Each of the four algorithms produces materially different candidate sets
   on the same dataset (validating that algorithm choice is meaningful, not
   cosmetic).
-- No merge happens without an explicit user accept action on that specific
-  candidate group.
+- No merge happens without the user explicitly checking that specific
+  pair's "Merge?" box (or clicking one of its two addresses, which
+  auto-checks it) and then clicking "Merge selected & re-cluster."
 - The exported CSV re-imports cleanly (preserves leading-zero zips, literal
   `"NA"` tokens, row count integrity).
 
@@ -107,5 +123,5 @@ scale past a few hundred rows.
 | M1 — Scaffold + upload + mapping | G5 (foundation), prerequisite for all others |
 | M2 — Fingerprint + N-Gram Fingerprint + read-only results | G1, G2 (first two algorithms) |
 | M3 — Levenshtein + NCD/PPM + blocking | G1, G2 (remaining two algorithms, made tractable via blocking) |
-| M4 — Accept/reject + representative + merge/rerun | G3 |
+| M4 — Combined algorithm/results page, pairwise merge + rerun | G3 |
 | M5 — CSV export + CI | G4, G5 (quality gate) |

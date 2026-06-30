@@ -25,18 +25,18 @@ assigned; do not renumber on later edits.
 | BL-17a | Add `pair_id: str` field to `CandidatePair` in `domain.py` (uuid4, assigned by `matching_service`) | M3 | Must | In Progress |
 | BL-17b | Extend `POST /algorithm` router to validate `threshold` for Levenshtein (≥ 0) and NCD (1–10); extend `algorithm.html` with `threshold` input | M3 | Must | In Progress |
 | BL-17c | Extend `results.html` with per-algorithm distance scale sub-label ("edit distance" / "NCD score (0–1)") | M3 | Must | In Progress |
-| BL-18 | `CandidatePair` full model (status, representative fields) | M4 | Must | Planned |
-| BL-19 | Results router mutation endpoints (accept/reject/representative) | M4 | Must | Planned |
+| BL-18 | Pairwise `CandidatePair` model: fix `row_indices` to always length 2 (explode key-collision clusters pairwise; drop NN union-find clustering); relabel `ParamSpec.label` for Levenshtein/NCD (`"Radius"`) and N-Gram (`"N-Gram size"`) | M4 | Must | Planned |
+| BL-19 | Merge `routers/algorithm.py` + `routers/results.py` into one combined `GET/POST /algorithm` page (Method -> Distance function -> parameter field, filtered/shown per `frd.md` FR-3.2/FR-3.3); `GET /results` becomes a redirect to `/algorithm` | M4 | Must | Planned |
 | BL-20 | Real `ComputeBackend.replace_values` implementation | M4 | Must | Planned |
-| BL-21 | `merge_service.apply_merge` (rewrite rows, append version, rerun matching) | M4 | Must | Planned |
-| BL-22 | `POST /merge` router + live `_pair_row.html` | M4 | Must | Planned |
+| BL-21 | `merge_service.apply_merge` — pairwise rewrite of both rows per checked pair, conflict detection/blocking (FR-6.3), append version + rerun matching only on a successful merge, no-op on zero-checked (FR-6.5) | M4 | Must | Planned |
+| BL-22 | Live HTMX results table: `app/static/js/match.js` (client-side checkbox-default + click-to-set-value interactions, FR-5.4/FR-5.5), `POST /merge` endpoint, editable "New cell value" input + "Merge?" checkbox + "Merge selected & re-cluster" button in `_pair_row.html`/`_results_table.html` | M4 | Must | Planned |
 | BL-23 | `csv_service.build_export` + `GET /export.csv` | M5 | Must | Planned |
 | BL-24 | GitHub Actions CI workflow (ruff check/format, pytest, matrix 3.11/3.12) | M5 | Must | Planned |
-| BL-25 | Full-stack smoke test (upload->mapping->algorithm->accept->merge->export) | M5 | Must | Planned |
+| BL-25 | Full-stack smoke test (upload->mapping->algorithm->check "Merge?"->merge->export; updated from the pre-M4 plan's "accept" step, which no longer exists) | M5 | Must | Planned |
 | BL-26 | `docs/design/ui-design-spec.md` — OpenRefine-derived palette/typography/spacing/component spec | chore-frontend-redesign | Must | Done |
 | BL-27 | Restructure `app/static/css/styles.css` into design-token-based system (palette, spacing, table/button states) per ui-design-spec | chore-frontend-redesign | Must | Planned |
 | BL-28 | Restyle `base.html` header banner + `mapping.html`/`algorithm.html` control-row/control-group layout | chore-frontend-redesign | Must | Planned |
-| BL-29 | Restyle `results.html`/`_results_table.html`/`_pair_row.html` (table zebra/hover, disabled-button treatment) | chore-frontend-redesign | Must | Planned |
+| BL-29 | Restyle `results.html`/`_results_table.html`/`_pair_row.html` (table zebra/hover, disabled-button treatment) — `results.html` itself is later merged into `algorithm.html` by M4 (BL-19); the `_results_table.html`/`_pair_row.html` component styling this item produces carries forward unchanged | chore-frontend-redesign | Must | Planned |
 | BL-30 | Extend `.claude/agents/tester.md` with Playwright Visual QA pass; add `playwright` to `requirements-dev.txt` | chore-frontend-redesign | Must | Done |
 
 ## Priority legend

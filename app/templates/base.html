@@ -13,8 +13,7 @@
     <nav class="stepper">
       <span class="step {% if active_step == 'upload' %}current{% endif %}">1. Upload</span>
       <span class="step {% if active_step == 'mapping' %}current{% endif %}">2. Mapping</span>
-      <span class="step {% if active_step == 'algorithm' %}current{% endif %}">3. Algorithm</span>
-      <span class="step {% if active_step == 'results' %}current{% endif %}">4. Results</span>
+      <span class="step {% if active_step == 'algorithm' %}current{% endif %}">3. Match & Merge</span>
     </nav>
   </header>
 
@@ -22,5 +21,7 @@
     {% include "partials/_flash.html" %}
     {% block content %}{% endblock %}
   </main>
+
+  {% block scripts %}{% endblock %}
 </body>
 </html>

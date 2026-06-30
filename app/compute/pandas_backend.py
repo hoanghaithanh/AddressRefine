@@ -45,7 +45,9 @@ class PandasComputeBackend(ComputeBackend):
     def replace_values(
         self, frame: Any, street_col: str, row_indices: list[int], new_value: str
     ) -> Any:
-        raise NotImplementedError("implemented in a later milestone")
+        updated = frame.copy()
+        updated.loc[row_indices, street_col] = new_value
+        return updated
 
     def to_csv_bytes(self, frame: Any) -> bytes:
         return frame.to_csv(index=False).encode("utf-8")

@@ -1,70 +1,93 @@
 {% extends "base.html" %}
 
-{% block title %}Algorithm — AddressRefine{% endblock %}
+{% block title %}Match & Merge — AddressRefine{% endblock %}
 
 {% block content %}
-<h2>Choose a matching algorithm</h2>
-<p>Pick an algorithm to find candidate duplicate addresses in your dataset.</p>
+<h2>Cluster and merge street addresses</h2>
+<p>
+  Find groups of different street-address values that might be the same
+  real-world address. Pick a Method and Distance function, review the
+  candidate pairs below, then check the rows you want to merge.
+</p>
 
-<form method="post" action="/algorithm" class="algorithm-form form-panel">
+<form id="match-controls" class="match-controls form-panel">
   <div class="control-row">
     <div class="control-group">
-      <label for="algorithm_key">Algorithm</label>
-      <select id="algorithm_key" name="algorithm_key" required class="field">
-        {% for algo in algorithms %}
-          <option value="{{ algo.key }}" {% if algo.key == selected_key %}selected{% endif %}>{{ algo.label }}</option>
-        {% endfor %}
+      <label for="method">Method</label>
+      <select
+        id="method"
+        name="method"
+        class="field"
+        hx-post="/algorithm/recompute"
+        hx-target="#results-table-container"
+        hx-swap="outerHTML"
+        hx-include="#match-controls"
+        hx-trigger="change"
+      >
+        <option
+          value="nearest_neighbor"
+          {% if algorithm_family == AlgorithmFamily.NEAREST_NEIGHBOR %}selected{% endif %}
+        >Nearest Neighbor</option>
+        <option
+          value="key_collision"
+          {% if algorithm_family == AlgorithmFamily.KEY_COLLISION %}selected{% endif %}
+        >Fingerprint</option>
       </select>
     </div>
 
     <div class="control-group">
-      <label for="n">N-gram size (N-Gram Fingerprint only)</label>
-      <input
-        type="number"
-        id="n"
-        name="n"
-        min="1"
-        step="1"
+      <label for="algorithm_key">Distance function</label>
+      <select
+        id="algorithm_key"
+        name="algorithm_key"
         class="field"
-        value="{{ algorithm_params.n if algorithm_params and algorithm_params.n else 2 }}"
+        hx-post="/algorithm/recompute"
+        hx-target="#results-table-container"
+        hx-swap="outerHTML"
+        hx-include="#match-controls"
+        hx-trigger="change"
       >
+        {% for algo in algorithms %}
+          <option
+            value="{{ algo.key }}"
+            data-family="{{ algo.family.value }}"
+            data-param-name="{{ algo.param_specs[0].name if algo.param_specs else '' }}"
+            data-param-label="{{ algo.param_specs[0].label if algo.param_specs else '' }}"
+            data-param-default="{{ algo.param_specs[0].default if algo.param_specs else '' }}"
+            {% if algo.key == selected_key %}selected{% endif %}
+          >{{ algo.label }}</option>
+        {% endfor %}
+      </select>
     </div>
 
-    {# Threshold field: shown for nearest-neighbor algorithms (Levenshtein and NCD),
-       hidden for key-collision algorithms (Fingerprint and N-Gram Fingerprint).
-       For Levenshtein: threshold >= 0 integer, default 3 (edit distance).
-       For NCD: threshold 1–10 integer, default 3 (scaled internally to 0.1–1.0). #}
-    {% set nn_keys = [] %}
-    {% for algo in algorithms %}
-      {% if algo.family.value == "nearest_neighbor" %}
-        {% set _ = nn_keys.append(algo.key) %}
-      {% endif %}
-    {% endfor %}
-
-    {% if selected_key in nn_keys %}
-    <div class="control-group">
-      <label for="threshold">Threshold
-        {% if selected_key == "levenshtein" %}(max edit distance, &ge; 0){% endif %}
-        {% if selected_key == "ncd" %}(similarity, 1–10; internally scaled to 0.1–1.0){% endif %}
-      </label>
-      <input
-        type="number"
-        id="threshold"
-        name="threshold"
-        min="{% if selected_key == 'ncd' %}1{% else %}0{% endif %}"
-        max="{% if selected_key == 'ncd' %}10{% endif %}"
-        step="1"
-        class="field"
-        value="{{ algorithm_params.threshold if algorithm_params and algorithm_params.threshold is not none else 3 }}"
-      >
-    </div>
-    {% else %}
-    {# Hidden threshold field so POSTed form always includes the field name;
-       ignored by the router for key-collision algorithms. #}
-    <input type="hidden" name="threshold" value="">
+    {% set param_spec = selected_algorithm.param_specs[0] if selected_algorithm and selected_algorithm.param_specs else none %}
+    {% if param_spec %}
+      <div class="control-group" id="param-field-group">
+        <label for="param-field" id="param-field-label">{{ param_spec.label }}</label>
+        <input
+          type="number"
+          id="param-field"
+          name="{{ param_spec.name }}"
+          min="{% if selected_key == 'ncd' %}1{% elif selected_key == 'levenshtein' %}0{% else %}1{% endif %}"
+          {% if selected_key == 'ncd' %}max="10"{% endif %}
+          step="1"
+          class="field"
+          value="{{ algorithm_params[param_spec.name] if algorithm_params and algorithm_params[param_spec.name] is not none else param_spec.default }}"
+          data-bound-param="{{ param_spec.name }}"
+          hx-post="/algorithm/recompute"
+          hx-target="#results-table-container"
+          hx-swap="outerHTML"
+          hx-include="#match-controls"
+          hx-trigger="change"
+        >
+      </div>
     {% endif %}
   </div>
-
-  <button type="submit" class="btn btn-primary">Run matching</button>
 </form>
+
+{% include "partials/_results_table.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/match.js"></script>
 {% endblock %}

@@ -1,11 +1,12 @@
 # Functional Requirements Document — AddressRefine
 
-Status: Living document. Last revised: `chore-frontend-redesign` BA pass
-(2026-06-29). Reflects functionality shipped through M3 plus M3 requirements
-fully specified, plus FR-9 (Visual Design System) added for the
-`chore/frontend-redesign-openrefine` chore; M4-M5 are described at the level
-of detail available in the plan and will be filled in/corrected as each
-milestone's BA pass runs.
+Status: Living document. Last revised: M4 BA pass (2026-06-30). Reflects
+functionality shipped through M3, FR-9 (Visual Design System) from the
+`chore/frontend-redesign-openrefine` chore, and a full rewrite of FR-3/FR-5/
+FR-6 for M4's combined algorithm-and-results page scope (replacing the
+earlier accept/reject/representative/pending-status plan). M5 is still
+described at the level of detail available in the plan and will be filled
+in/corrected when its BA pass runs.
 
 Each functional requirement (FR) is referenced from `traceability-matrix.md`
 and from the relevant milestone's acceptance-criteria file.
@@ -60,7 +61,8 @@ and from the relevant milestone's acceptance-criteria file.
   dataset in the session (`session.current_df is None`), the system shall
   redirect to `/` (HTTP 303).
 
-## FR-3 — Algorithm Selection (M2 shipped; FR-3.5 added M3)
+## FR-3 — Algorithm Selection (M2 shipped; FR-3.5 added M3; FR-3.2/FR-3.4
+restated, FR-3.6–FR-3.9 added M4 for the combined page)
 
 - **FR-3.1**: The system shall expose a registry of available matching
   algorithms (`app/algorithms/registry.py`, `ALGORITHM_REGISTRY`,
@@ -68,52 +70,117 @@ and from the relevant milestone's acceptance-criteria file.
   `key` and presenting a `label`, `family` (`AlgorithmFamily`, e.g.
   key-collision vs. nearest-neighbor), and a `param_specs` list describing
   its configurable parameters (`ParamSpec`).
-- **FR-3.2**: `GET /algorithm` shall render a form letting the user choose
-  one of the registered algorithms and, for the selected algorithm, its
-  parameters (default values per `ParamSpec`). As of M3, the form shall
-  also include a `threshold` input field shown/hidden via Jinja conditional
-  based on algorithm family (visible for NN algorithms, hidden for
-  key-collision algorithms).
-- **FR-3.3**: As of M2, the registry shall contain exactly two algorithms,
-  both key-collision family: Fingerprint (no parameters) and N-Gram
-  Fingerprint (parameter `n`, default `2`).
-- **FR-3.4**: `POST /algorithm` shall validate and persist the chosen
-  algorithm key + params onto `session.algorithm_params`, then trigger
-  matching (see FR-4) and redirect to `/results` (HTTP 303). Per-algorithm
-  validation rules: `n >= 1` for N-Gram Fingerprint (M2); `threshold >= 0`
-  (int) for Levenshtein; `threshold` in `[1, 10]` (int) for NCD (M3).
-  Invalid params render the form again with HTTP 422 and a flash error
-  without persisting or running matching.
+- **FR-3.2 (restated M4)**: `GET /algorithm` shall render a single combined
+  page (algorithm/parameter controls plus the live results table — see
+  FR-5) modeled on `docs/design/reference/screenshots/AlgorithmSelectionAndResult.png`.
+  The page presents:
+  - a **Method** field choosing between "Nearest Neighbor" (maps to
+    `AlgorithmFamily.NEAREST_NEIGHBOR`) and "Fingerprint" (maps to
+    `AlgorithmFamily.KEY_COLLISION`);
+  - a **Distance function** field whose options are filtered by the chosen
+    Method: Nearest Neighbor offers "Levenshtein" / "PPM (NCD)"; Fingerprint
+    offers "Fingerprint" / "N-Gram Fingerprint" (i.e. the four
+    `ALGORITHM_REGISTRY` entries, regrouped into a two-level Method ->
+    Distance function selection rather than M2/M3's flat single-select);
+  - a parameter field whose presence/label depends on the chosen distance
+    function (see FR-3.3 below).
+- **FR-3.3 (M4)**: The parameter field accompanying the Distance function
+  selector is:
+  - labeled **"Radius"** for Levenshtein or PPM/NCD — this is the existing
+    `threshold` parameter (`ParamSpec.name == "threshold"`); only the
+    displayed `ParamSpec.label` text changes (to `"Radius"`), not the
+    parameter name, semantics, or valid range;
+  - **omitted entirely** for Fingerprint (it has no `param_specs`, so no
+    field is rendered — not just hidden via CSS/Jinja conditional but
+    structurally absent from the form for that selection, consistent with
+    FR-3.2's filtering);
+  - labeled **"N-Gram size"** for N-Gram Fingerprint — the existing `n`
+    parameter; only `ParamSpec.label` changes (to `"N-Gram size"`).
+- **FR-3.4 (restated M4)**: Any change to Method, Distance function, or the
+  parameter field shall trigger an HTMX request that re-validates and
+  persists the choice onto `session.algorithm_key` / `session.algorithm_params`,
+  runs matching (see FR-4), and swaps in a refreshed results-table partial
+  (FR-5) **in place, with no full-page reload and no explicit submit
+  button** for this live-recompute path. (The legacy M2/M3 behavior of a
+  `POST /algorithm` form submit redirecting to a separate `/results` page
+  no longer exists as of M4 — see FR-3.9.) Per-distance-function validation
+  rules are unchanged from M2/M3: `n >= 1` for N-Gram Fingerprint;
+  `threshold >= 0` (int, displayed as "Radius") for Levenshtein; `threshold`
+  in `[1, 10]` (int, displayed as "Radius") for PPM/NCD. Invalid params
+  re-render the form/table fragment with HTTP 422 and a flash error without
+  persisting or running matching.
 - **FR-3.5 (M3)**: Levenshtein Distance (key `"levenshtein"`, label
   `"Levenshtein Distance"`, parameter `threshold` default `3`, valid range
   `>= 0`) and PPM/NCD (key `"ncd"`, label `"PPM / NCD"`, parameter
   `threshold` default `3`, valid UI range `[1, 10]`, internally scaled to
   `ui_threshold / 10.0`) shall be added to the registry as
-  `AlgorithmFamily.NEAREST_NEIGHBOR` algorithms.
+  `AlgorithmFamily.NEAREST_NEIGHBOR` algorithms. (`ParamSpec.label` for
+  `threshold` is updated to `"Radius"` by FR-3.3 above — a display-only
+  change, the algorithm/registry semantics from M3 are otherwise
+  unchanged.)
+- **FR-3.6 (M4)**: As of M2, the registry shall contain exactly two
+  algorithms, both key-collision family: Fingerprint (no parameters) and
+  N-Gram Fingerprint (parameter `n`, default `2`). *(Renumbered from the
+  former FR-3.3, unchanged in substance.)*
+- **FR-3.7 (M4)**: `GET /algorithm` (the combined page) is the single entry
+  point for both algorithm selection and result review. `GET /results` no
+  longer renders an independent page; `GET /results` shall instead respond
+  with an HTTP redirect to `/algorithm` (see FR-5.1).
+- **FR-3.8 (M4)**: `app/static/js/match.js` (the project's first
+  hand-written client-side JS file) shall handle purely client-side
+  interactions that do not require a server round-trip: defaulting "New
+  cell value" when "Merge?" is checked without clicking an address (FR-5.4),
+  and setting "New cell value" + auto-checking "Merge?" when an address is
+  clicked (FR-5.5). The live-recompute triggered by changing Method/
+  Distance function/Radius/N-Gram size remains HTMX-driven (FR-3.4), not a
+  manual `fetch()` call from `match.js`.
+- **FR-3.9 (M4)**: The previously-planned `GET /algorithm/params` HTMX
+  param-fragment endpoint (referenced in the original project plan) is
+  superseded by FR-3.4's broader live-recompute behavior — changing Method
+  or Distance function re-renders both the parameter field and the results
+  table together in one HTMX swap, not the parameter field alone via a
+  separate endpoint.
 
-## FR-4 — Matching Execution (M2 partial; M3 completes NN path)
+## FR-4 — Matching Execution (M2 partial; M3 completes NN path; M4 drops
+transitive clustering)
 
 - **FR-4.1**: `matching_service.run_matching(session)` shall extract street
   addresses via `ComputeBackend.extract_street_addresses(frame, mapping)`
   (returning `dict[int, str]`), run the selected algorithm, and rebuild
   `session.candidate_pairs` from scratch on every invocation (no carry-over
-  of prior accept/reject state across reruns). Each resulting `CandidatePair`
-  is assigned a unique `pair_id` (uuid4 string) at construction time (M3).
-- **FR-4.2 (M2 scope, shipped)**: For key-collision algorithms (Fingerprint,
-  N-Gram Fingerprint), rows whose computed key collides are grouped into a
-  cluster; clusters of size 1 produce no candidate pair.
+  of prior merge-checkbox state across reruns — see FR-6's "no state across
+  recomputes" rule). Each resulting `CandidatePair` is assigned a unique
+  `pair_id` (uuid4 string) at construction time (M3).
+- **FR-4.2 (M2 scope, shipped; reconfirmed M4)**: For key-collision
+  algorithms (Fingerprint, N-Gram Fingerprint), rows whose computed key
+  collides are grouped into a same-key cluster of size >= 2; as of M4, every
+  pairwise combination within such a cluster is exploded into its own
+  `CandidatePair` (see FR-4.4) — clusters of size 1 still produce no pair,
+  but clusters of size >= 3 now produce `C(n, 2)` pairs rather than one
+  multi-member group.
 - **FR-4.3 (M2 scope, shipped)**: Algorithms must never receive or return a
   DataFrame — only `dict[int, str]` in, `AlgorithmOutput` (clusters or
   pairs) out. No file under `app/algorithms/` may import `pandas`.
-- **FR-4.4 (M3)**: For nearest-neighbor algorithms (Levenshtein, NCD),
-  `run_matching` shall call `ComputeBackend.extract_columns(frame, mapping)`
-  to obtain per-row zip and city values, pass the result to `compute_blocks`
-  (see FR-4.5) to partition rows into blocks, then run the NN algorithm
-  (which compares only within-block pairs), convert the resulting
-  `AlgorithmOutput.pairs` into clusters via union-find, and build one
-  `CandidatePair` per cluster. The `distance` field of each `CandidatePair`
-  shall be set to the maximum pairwise distance among all members of that
-  cluster. Key-collision algorithms continue to receive `blocks=None`.
+- **FR-4.4 (M3 introduced; superseded M4 — transitive clustering removed)**:
+  For nearest-neighbor algorithms (Levenshtein, NCD), `run_matching` shall
+  call `ComputeBackend.extract_columns(frame, mapping)` to obtain per-row
+  zip and city values, pass the result to `compute_blocks` (see FR-4.5) to
+  partition rows into blocks, then run the NN algorithm (which compares
+  only within-block pairs). **As of M4, each entry in
+  `AlgorithmOutput.pairs` becomes its own `CandidatePair` directly** — the
+  `_UnionFind`-based transitive-clustering step used in M3 is removed
+  entirely, so `CandidatePair.row_indices` is always exactly length 2 for
+  NN-family pairs. This is a **deliberate reversal of the M3 product
+  decision** "multi-pair cluster distance = max pairwise distance"
+  (previously documented in this project's working notes); see
+  `acceptance-criteria/m4-merge-review.md`'s Open Questions / Decisions
+  section for the explicit rationale. The `distance` field of each
+  NN-family `CandidatePair` is the single pairwise distance returned by the
+  algorithm for that pair (no longer a cluster maximum, since there is no
+  longer a cluster). Key-collision algorithms continue to receive
+  `blocks=None`; their pairs (FR-4.2) carry `distance=None` since no
+  distance check applies — same-key equality is itself the match
+  condition.
 - **FR-4.5 (M3)**: `algorithms/blocking.py` shall expose
   `compute_blocks(rows: dict[int, dict[str, str]]) -> dict[str, list[int]]`.
   Block key construction: if the row's `"zip"` value is non-blank after
@@ -135,37 +202,91 @@ and from the relevant milestone's acceptance-criteria file.
   included in `AlgorithmOutput.pairs`. Comparisons are only performed
   within the blocks provided by the `blocks` argument.
 
-## FR-5 — Results View (M2 read-only; M3 adds distance scale label; M4 interactive)
+## FR-5 — Results View (M2 read-only; M3 adds distance scale label; M4
+rewrite — merged into the combined page as a live, pairwise, editable table)
 
-## FR-5 — Results View (M2 read-only; M3 adds distance scale label; M4 interactive)
+- **FR-5.1 (M4 rewrite — full replacement of the M2/M3 behavior)**: A
+  dedicated full-page `GET /results` route no longer exists as of M4. The
+  live results table is rendered as part of `GET /algorithm` (FR-3.2) and
+  refreshed in place by the HTMX live-recompute (FR-3.4). For backward
+  compatibility with bookmarked/typed URLs, `GET /results` shall respond
+  with an HTTP redirect (303) to `/algorithm` rather than 404ing or
+  rendering its own page.
+- **FR-5.2 (M4)**: The results table shall render exactly one row per
+  `CandidatePair` in `session.candidate_pairs`, and **every `CandidatePair`
+  is exactly one pair of two addresses** (`len(row_indices) == 2`) — never
+  a multi-member cluster (see FR-4.2/FR-4.4). Each row displays:
+  - a **"Merge?"** checkbox (unchecked by default on every fresh
+    render/recompute — no carried-over checked state, consistent with
+    FR-4.1's "rebuilt from scratch" rule);
+  - the two candidate addresses, each individually clickable;
+  - an editable **"New cell value"** free-text input (FR-5.3);
+  - a **"Distance"** column showing the pair's numeric distance, shown only
+    for nearest-neighbor-family pairs; this column (or its cell content) is
+    omitted for fingerprint-family pairs, which carry no numeric distance
+    by construction (FR-4.4's `distance=None`).
+- **FR-5.3 (M4)**: "New cell value" is pre-filled per the interaction rules
+  in FR-5.4/FR-5.5 but remains a free-text editable `<input>` at all times
+  — the user may type any arbitrary value into it before merging, not just
+  one of the two candidate addresses shown in that row.
+- **FR-5.4 (M4)**: Checking a row's "Merge?" checkbox without having
+  clicked either address in that row shall default "New cell value" to
+  that row's first-listed address (i.e. the first element of
+  `row_indices`'/`row.rows[0]`'s street value, in the order the row was
+  rendered). This is a client-side-only behavior (`app/static/js/match.js`,
+  FR-3.8) — no server round-trip.
+- **FR-5.5 (M4)**: Clicking either address displayed in a row shall (a) set
+  "New cell value" to that address's text and (b) auto-check that row's
+  "Merge?" checkbox, regardless of its prior state. Also client-side-only
+  (`match.js`).
+- **FR-5.6 (M4)**: There is no per-pair accept/reject/dismiss action and no
+  persisted pair status of any kind (this supersedes the FR-5.2 in the
+  pre-M4 FRD, which referenced a `POST /results/pair/{id}/accept|reject|
+  representative` endpoint that is **not built** — see
+  `data-dictionary.md` for the dropped `status`/`representative_*` fields).
+  The only mutating action available from this page is the single
+  "Merge selected & re-cluster" button (FR-6).
 
-- **FR-5.1 (M2 shipped; M3 extends)**: `GET /results` shall render the
-  current `session.candidate_pairs` (one row/group per cluster) as a
-  read-only table: matched rows' street-address values, a distance column,
-  and inert accept/reject controls. As of M3, when the current algorithm is
-  a nearest-neighbor algorithm, the page shall display a scale sub-label
-  near the "Distance" column header: `"edit distance"` for Levenshtein and
-  `"NCD score (0–1)"` for NCD. For key-collision algorithms (Fingerprint,
-  N-Gram Fingerprint), no sub-label is shown and distance continues to
-  render as `"—"` per pair.
-- **FR-5.2 (M4, not yet built)**: `POST
-  /results/pair/{id}/accept|reject|representative` shall mutate that
-  specific `CandidatePair`'s `status`/representative fields (using
-  `pair_id` from M3 to address the pair) and return just that row's HTML
-  fragment (no full-page reload), via HTMX.
+## FR-6 — Merge and Rerun (M4 full rewrite — replaces the accept/reject
++ representative-selection plan referenced by the pre-M4 FRD)
 
-## FR-6 — Merge and Rerun (M4, not yet built)
-
-- **FR-6.1**: `merge_service.apply_merge(session, backend)` shall, for
-  each `CandidatePair` with `status == "accepted"`, resolve a
-  representative value (either the text of one of the matched original
-  rows or user-supplied custom text), call
-  `ComputeBackend.replace_values` to rewrite all matched rows' street
-  value to that representative, append a new `DatasetVersion` with
-  `created_from_merge=True`, and then call `run_matching` again so the
-  results view reflects the merged data immediately.
-- **FR-6.2**: `apply_merge` shall raise `ValueError` if no candidate pair
-  has `status == "accepted"` at merge time.
+- **FR-6.1**: A single **"Merge selected & re-cluster"** button (no
+  Select-all / Deselect-all / Export-clusters / Close buttons — those
+  OpenRefine-dialog extras are explicitly out of scope for AddressRefine)
+  shall submit all checked rows' current pair id + current "New cell
+  value" text to the merge endpoint.
+- **FR-6.2**: `merge_service.apply_merge(session, backend, merge_requests)`
+  shall, for every **checked** row submitted (no `status` field is read or
+  written — there is no accept/reject/pending model as of M4), rewrite
+  **both** underlying dataset rows in that pair (`row_indices[0]` and
+  `row_indices[1]`) to that row's submitted "New cell value" via
+  `ComputeBackend.replace_values`, not just the non-matching side — this is
+  idempotent for whichever side already equals the target value.
+- **FR-6.3 — Conflict detection (final, resolved)**: Before any mutation is
+  applied, `apply_merge` shall check whether any underlying dataset row
+  index is targeted by two or more checked rows with **different** "New
+  cell value" texts (e.g. pair A-B checked with value `"B"` and pair A-C
+  checked with value `"C"` both target row A but disagree). If any such
+  conflict exists, the merge is **blocked entirely**: no row is mutated, no
+  `DatasetVersion` is appended, and the response surfaces a validation
+  error listing every conflicting row index and its disagreeing target
+  values, so the user can fix their checkbox/text-field selections and
+  resubmit. This is a hard block, not a silent last-write-wins or
+  first-write-wins resolution.
+- **FR-6.4**: If no conflicts are detected and at least one row was
+  checked, `apply_merge` shall apply all rewrites, append a new
+  `DatasetVersion` with `created_from_merge=True` (`version = previous + 1`
+  per `data-dictionary.md`'s `DatasetVersion.version` note), and then call
+  `run_matching` again — using the algorithm/params currently selected at
+  merge time, not the defaults — so the results table reflects the merged
+  data immediately on the same combined page.
+- **FR-6.5**: If zero rows were checked, clicking "Merge selected &
+  re-cluster" is a no-op: no `ValueError`, no version append, no rerun, no
+  validation error — the page/table is simply unchanged. (This differs
+  from the pre-M4 FRD's FR-6.2, which specified `apply_merge` raising
+  `ValueError` on an empty accepted set under the old accept/reject model;
+  under the M4 model, "nothing checked" is a normal, harmless idle state of
+  a live table rather than an erroneous submit action.)
 
 ## FR-7 — CSV Export (M5, not yet built)
 
@@ -187,16 +308,24 @@ and from the relevant milestone's acceptance-criteria file.
   in `app/main.py`. Any new router added in future milestones gets this
   behavior automatically and requires no special handling.
 
-## FR-9 — Visual Design System (chore: `chore-frontend-redesign`, not yet built)
+## FR-9 — Visual Design System (chore: `chore-frontend-redesign`, shipped)
 
 Source: `docs/design/ui-design-spec.md` (OpenRefine-derived visual language),
 GitHub issue #10. This is a process/visual chore, not a numbered milestone —
 see `CLAUDE.md`'s Workflow section, chore-loop variant. Scope is explicitly
-"visual only, current structure": the 4-screen wizard (`upload.html`,
-`mapping.html`, `algorithm.html`, `results.html`) keeps its existing routes,
-forms, and field names; only CSS custom properties, class names, and markup
-*wrapper* structure (e.g. grouping existing fields into `.control-row`/
-`.control-group` containers) change.
+"visual only, current structure": **at the time this chore shipped**, the
+4-screen wizard (`upload.html`, `mapping.html`, `algorithm.html`,
+`results.html`) kept its existing routes, forms, and field names; only CSS
+custom properties, class names, and markup *wrapper* structure changed.
+M4 (FR-3/FR-5/FR-6 above) subsequently merges `algorithm.html` and
+`results.html` into one combined page and extends the component system
+with new interactive elements (per-row checkbox, editable "New cell value"
+input, merge action bar) that did not exist when this chore's FR-9.1–FR-9.8
+below were written — those component classes/tokens remain the visual
+foundation M4 builds on, not a description of the current page count.
+Historical detail below is left as-shipped: at the time, only CSS custom
+properties, class names, and markup *wrapper* structure (e.g. grouping
+existing fields into `.control-row`/`.control-group` containers) changed.
 
 - **FR-9.1**: `app/static/css/styles.css` shall define, under `:root`, at
   least the following CSS custom properties with the values specified in

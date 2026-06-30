@@ -1,24 +1,45 @@
-<tr class="pair-row">
+<tr class="pair-row" data-pair-id="{{ group.pair_id }}">
+  <td>
+    <input
+      type="checkbox"
+      class="pair-row-checkbox"
+      data-pair-id="{{ group.pair_id }}"
+    >
+  </td>
   <td>
     <ul class="pair-row-addresses">
       {% for row in group.rows %}
         <li>
-          <span class="pair-row-index">#{{ row.row_index }}</span>
-          {{ row.columns.street }}
-          {% if row.columns.city %}, {{ row.columns.city }}{% endif %}
-          {% if row.columns.zip %} {{ row.columns.zip }}{% endif %}
-          {% if row.columns.country %}, {{ row.columns.country }}{% endif %}
+          <button
+            type="button"
+            class="pair-row-address"
+            data-row-index="{{ row.row_index }}"
+            data-address="{{ row.columns.street }}"
+          >
+            <span class="pair-row-index">#{{ row.row_index }}</span>
+            {{ row.columns.street }}
+            {% if row.columns.city %}, {{ row.columns.city }}{% endif %}
+            {% if row.columns.zip %} {{ row.columns.zip }}{% endif %}
+            {% if row.columns.country %}, {{ row.columns.country }}{% endif %}
+          </button>
         </li>
       {% endfor %}
     </ul>
   </td>
-  <td class="pair-row-distance">
-    {% if group.distance is not none %}{{ group.distance }}{% else %}&mdash;{% endif %}
+  <td>
+    <input
+      type="text"
+      class="field pair-row-new-value"
+      value=""
+    >
+    {# Submitted fields: only included in the POST /merge payload while the
+       row's "Merge?" checkbox is checked. match.js toggles `disabled` on
+       these in lockstep with the checkbox, and keeps `value` in sync with
+       the visible "New cell value" input above on every keystroke. #}
+    <input type="hidden" class="pair-row-pair-id-field" name="pair_id" value="{{ group.pair_id }}" disabled>
+    <input type="hidden" class="pair-row-new-value-field" name="new_value" value="" disabled>
   </td>
-  <td class="pair-row-actions">
-    <!-- Accept/Reject controls are present but inert in M2: there is no
-         working POST /results/* handler yet, so these submit nothing. -->
-    <button type="button" class="btn btn-primary" disabled>Accept</button>
-    <button type="button" class="btn btn-secondary" disabled>Reject</button>
-  </td>
+  {% if algorithm_family == AlgorithmFamily.NEAREST_NEIGHBOR %}
+    <td class="pair-row-distance">{{ group.distance }}</td>
+  {% endif %}
 </tr>

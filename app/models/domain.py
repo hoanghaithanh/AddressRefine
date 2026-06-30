@@ -39,12 +39,16 @@ class DatasetVersion:
 
 @dataclass
 class CandidatePair:
-    """A group of row indices the matching algorithm believes are duplicates.
+    """A single pair of row indices the matching algorithm believes are duplicates.
 
-    `distance` is `None` for key-collision algorithms (Fingerprint, N-Gram
-    Fingerprint) since they cluster by exact key equality rather than a
+    As of M4, `row_indices` is always exactly length 2: key-collision clusters
+    of size N are exploded into `C(N, 2)` pairwise `CandidatePair`s, and
+    nearest-neighbor algorithms already only ever return pairs (no transitive
+    clustering). `distance` is `None` for key-collision algorithms (Fingerprint,
+    N-Gram Fingerprint) since they match by exact key equality rather than a
     pairwise distance score. Nearest-neighbor algorithms populate it with the
-    maximum pairwise distance in the cluster.
+    single pairwise distance for that exact pair, as returned directly by the
+    algorithm — never an aggregate/maximum across multiple pairs.
 
     `pair_id` is a UUID4 string assigned by `matching_service` at construction
     time and is unique across all pairs in a single matching run.
