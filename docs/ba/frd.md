@@ -1,9 +1,11 @@
 # Functional Requirements Document — AddressRefine
 
-Status: Living document. Last revised: M3 BA pass (2026-06-29). Reflects
-functionality shipped through M2 plus M3 requirements now fully specified;
-M4-M5 are described at the level of detail available in the plan and will
-be filled in/corrected as each milestone's BA pass runs.
+Status: Living document. Last revised: `chore-frontend-redesign` BA pass
+(2026-06-29). Reflects functionality shipped through M3 plus M3 requirements
+fully specified, plus FR-9 (Visual Design System) added for the
+`chore/frontend-redesign-openrefine` chore; M4-M5 are described at the level
+of detail available in the plan and will be filled in/corrected as each
+milestone's BA pass runs.
 
 Each functional requirement (FR) is referenced from `traceability-matrix.md`
 and from the relevant milestone's acceptance-criteria file.
@@ -184,3 +186,64 @@ and from the relevant milestone's acceptance-criteria file.
   applied to the actual outgoing response by `session_cookie_middleware`
   in `app/main.py`. Any new router added in future milestones gets this
   behavior automatically and requires no special handling.
+
+## FR-9 — Visual Design System (chore: `chore-frontend-redesign`, not yet built)
+
+Source: `docs/design/ui-design-spec.md` (OpenRefine-derived visual language),
+GitHub issue #10. This is a process/visual chore, not a numbered milestone —
+see `CLAUDE.md`'s Workflow section, chore-loop variant. Scope is explicitly
+"visual only, current structure": the 4-screen wizard (`upload.html`,
+`mapping.html`, `algorithm.html`, `results.html`) keeps its existing routes,
+forms, and field names; only CSS custom properties, class names, and markup
+*wrapper* structure (e.g. grouping existing fields into `.control-row`/
+`.control-group` containers) change.
+
+- **FR-9.1**: `app/static/css/styles.css` shall define, under `:root`, at
+  least the following CSS custom properties with the values specified in
+  `docs/design/ui-design-spec.md`'s Palette table: `--color-bg`,
+  `--color-surface`, `--color-header-bg`, `--color-header-border`,
+  `--color-text`, `--color-border`, `--color-primary`,
+  `--color-primary-hover`, `--color-secondary-bg`,
+  `--color-table-header-bg`, `--color-table-row-odd`,
+  `--color-table-row-even`, `--color-muted`, `--color-link`.
+- **FR-9.2**: `app/static/css/styles.css` shall define spacing custom
+  properties `--space-xs`, `--space-sm`, `--space-md`, `--space-lg`,
+  `--space-xl` per the ui-design-spec's Spacing scale table, and existing
+  hard-coded rem-based gap/padding/margin values in component rules shall be
+  expressed in terms of these tokens rather than as new bare literals.
+- **FR-9.3**: No template under `app/templates/` (including `partials/`)
+  shall contain an inline `style="..."` attribute. All visual styling is
+  expressed via CSS classes in `styles.css` (statically verifiable by
+  grepping `app/templates/**/*.html` for `style=`).
+- **FR-9.4**: `base.html`'s `.site-header` shall use `--color-header-bg`
+  for its background and `--color-header-border` for its bottom border
+  (replacing the current plain-white header background), per the
+  ui-design-spec's Palette table.
+- **FR-9.5**: `mapping.html` and `algorithm.html` shall wrap their existing
+  form fields in `.control-row` / `.control-group` container `<div>`s per
+  the ui-design-spec's Layout pattern section, without changing any
+  `name=`, `id=`, validation, or POST-target attributes on the underlying
+  `<label>`/`<select>`/`<input>` elements.
+- **FR-9.6**: All submit buttons across the 4 screens ("Upload", "Save
+  mapping", "Run matching") shall carry the `.btn` and `.btn-primary`
+  classes defined in `styles.css` per the ui-design-spec's Button styling
+  table, replacing the current bare-`button`-selector styling.
+- **FR-9.7**: `.results-table` shall apply header-row shading
+  (`--color-table-header-bg`), alternating zebra-striped body rows
+  (`--color-table-row-odd` / `--color-table-row-even` via
+  `tr:nth-child(odd)`/`tr:nth-child(even)`), and a row-hover background,
+  per the ui-design-spec's Table styling section.
+- **FR-9.8**: The inert `Accept`/`Reject` buttons in
+  `partials/_pair_row.html` shall carry `.btn` plus a visible `:disabled`
+  treatment (reduced opacity, muted text color) per the ui-design-spec's
+  Button styling table, distinguishing them visually from an enabled
+  primary button even though they remain non-functional until M4.
+- **FR-9.9 (qualitative, not code-checkable)**: The overall visual
+  impression of all 4 screens — palette, typography scale, table/button
+  shapes — shall be judged by the `tester` agent's Visual QA pass
+  (Playwright screenshots compared against
+  `docs/design/reference/screenshots/`) as "reasonably faithful" to the
+  OpenRefine reference material, per `.claude/agents/tester.md`'s
+  Visual — Must fix / Visual — Informational split. This requirement is
+  intentionally subjective; FR-9.1 through FR-9.8 above carry the
+  objective, automatable portion of this chore's acceptance bar.

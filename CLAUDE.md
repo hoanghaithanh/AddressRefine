@@ -10,6 +10,7 @@ Full architecture/design rationale lives in the original plan at `C:\Users\hoang
 py -3.11 -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements-dev.txt
+playwright install chromium    # one-time; downloads headless Chromium for visual QA (frontend-design chores)
 ```
 
 ## Common commands
@@ -36,6 +37,17 @@ ruff format --check .              # format check
 - **Algorithms are backend-agnostic** (from Milestone 2 onward): `MatchingAlgorithm` implementations in `app/algorithms/` operate on `dict[int, str]`/`dict[str, list[int]]`, never on a DataFrame. If a new algorithm needs row metadata beyond the street address, extend `ComputeBackend.extract_columns`'s output shape, not the algorithm's input type.
 - **Upload size limit**: enforced by reading the upload in chunks and aborting as soon as the running total exceeds `settings.MAX_UPLOAD_BYTES` (10 MB) — not by reading the whole file first and checking after. Keep this streaming-check pattern for any future upload-like endpoint.
 
+## Frontend conventions
+
+`app/static/css/styles.css` is a single hand-written design system styled after [OpenRefine](https://openrefine.org/) (established by the `chore/frontend-redesign-openrefine` chore, issue #10) — no CSS framework, no build step.
+
+- **Palette/spacing are CSS custom properties** in `:root` (`--color-*`, `--space-*`). Don't hardcode a hex literal or a bare `rem`/`px` spacing value in a component rule — add or reuse a custom property instead. (Two pre-existing exceptions not yet tokenized: `.flash-info` and the `tr:hover` background literal — fix forward if you're touching either rule anyway, not required otherwise.)
+- **No inline `style=` attributes** in any template, and **no ID-based CSS selectors** where a class works — use/extend the existing component classes instead.
+- **Layout pattern**: group related form fields with `.control-row` (flex row) wrapping one or more `.control-group` (flex column: label + input) elements — see `mapping.html`/`algorithm.html`. Inputs/selects get the shared `.field` class for consistent border/padding/focus/disabled styling.
+- **Buttons**: `.btn` is the base (flat gray, regular weight); `.btn-primary` and `.btn-secondary` add the same flat background but differ in font-weight (bold vs. regular) — OpenRefine's style is bold-vs-regular emphasis, not a saturated brand color, don't reintroduce one.
+- **Reference material**: `docs/design/ui-design-spec.md` is the source of truth for palette/typography/spacing/component decisions; `docs/design/reference/` holds the raw OpenRefine screenshots/HTML this was derived from. See `docs/design/README.md`.
+- This redesign is **visual-only** — it deliberately did not add the editable "new cell value" field, merge/export action-bar footer, or any screen-merging seen in OpenRefine's reference UI. Those are in scope for M4, which should extend (not replace) this component system.
+
 ## Known v1 tradeoffs (intentional, not bugs)
 
 - Single in-memory session, no auth, no persistence across restarts.
@@ -59,10 +71,13 @@ This project is built milestone-by-milestone (see the plan file above for the fu
 
 The orchestrating session folds the BA's acceptance criteria into the milestone's GitHub issue body before the coder pass starts. M1 predates this process — it went straight through coder → tester → reviewer, and its `docs/ba/` artifacts were backfilled retroactively rather than written up front.
 
+**Chores** (process/tooling work that doesn't belong to a numbered milestone, e.g. agent-definition changes or a frontend redesign) go through the same four-step loop, with two adjustments: (a) tracking is a plain GitHub issue, not a Milestone object, and per-artifact files use a `chore-<slug>` stem instead of `m<N>-<slug>`; (b) a frontend-visual chore specifically adds a Visual QA pass to the tester step (Playwright screenshots compared against `docs/design/reference/`, reported as **Visual — Must fix** / **Visual — Informational**) alongside, not instead of, normal `pytest` coverage. See `.claude/agents/tester.md` for the Visual QA pass details and `docs/design/README.md` for where reference material lives.
+
 ## GitHub repo conventions
 
 - **Repo**: https://github.com/hoanghaithanh/AddressRefine (public). Remote `origin` uses SSH.
 - **Branching, from M2 onward**: one feature branch per milestone (e.g. `m2-fingerprint-algorithms`), opened as a PR linked to that milestone's issue. The senior-dev review pass reports its findings to the orchestrating session before merge. M1 was the exception — it was committed directly to `main` before this convention was adopted.
+- **Chore branches**: process/tooling/non-feature work that doesn't belong to a numbered milestone (e.g. `chore/add-business-analyst-agent`, `chore/custom-agents`, `chore/frontend-redesign-openrefine`) uses a `chore/<slug>` branch and a plain GitHub issue — not a Milestone object — opened as a PR the same way a milestone branch is.
 - **Branch protection on `main`**: PRs required for all changes (no direct pushes), no force-push, no branch deletion. `required_approving_review_count` is intentionally `0` — this is a solo project, so the senior-dev review pass substitutes for a second human approver rather than blocking merge on one.
 - **Milestones/Issues/Project board**: GitHub Milestones M1–M5 mirror the plan's milestone breakdown (M1, M2, and M3 are closed). Each milestone has one tracking issue (#1–#5) summarizing its scope from the plan. All issues are on the "AddressRefine Roadmap" project board. When a milestone's scope changes, update its issue body and milestone description, not just this file.
 - **CI status checks are not yet required** on the branch protection rule because `.github/workflows/ci.yml` doesn't exist until M5. Once M5 lands CI, add it as a required status check on `main`.

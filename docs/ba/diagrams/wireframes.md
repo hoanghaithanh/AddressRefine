@@ -4,6 +4,15 @@ Status: Living document. Last revised: M2 BA pass (2026-06-28). ASCII-art
 approximations of the server-rendered Jinja2 templates under
 `app/templates/`. All pages extend `base.html`'s header + step indicator.
 
+**Visual styling note (chore/frontend-redesign-openrefine, 2026-06-29):** the
+ASCII layouts below describe *structure* only and are unchanged by the
+OpenRefine-visual-language chore (issue #10) — that chore is explicitly
+scoped as "visual only, current structure" (see
+`docs/ba/acceptance-criteria/chore-frontend-redesign.md`). For colors,
+typography, spacing, table/button styling, and the control-row/control-group
+form layout pattern now applied within these same box layouts, see
+`docs/design/ui-design-spec.md`.
+
 ## Shared header / step indicator (`base.html`)
 
 ```

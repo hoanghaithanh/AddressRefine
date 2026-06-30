@@ -33,6 +33,11 @@ assigned; do not renumber on later edits.
 | BL-23 | `csv_service.build_export` + `GET /export.csv` | M5 | Must | Planned |
 | BL-24 | GitHub Actions CI workflow (ruff check/format, pytest, matrix 3.11/3.12) | M5 | Must | Planned |
 | BL-25 | Full-stack smoke test (upload->mapping->algorithm->accept->merge->export) | M5 | Must | Planned |
+| BL-26 | `docs/design/ui-design-spec.md` — OpenRefine-derived palette/typography/spacing/component spec | chore-frontend-redesign | Must | Done |
+| BL-27 | Restructure `app/static/css/styles.css` into design-token-based system (palette, spacing, table/button states) per ui-design-spec | chore-frontend-redesign | Must | Planned |
+| BL-28 | Restyle `base.html` header banner + `mapping.html`/`algorithm.html` control-row/control-group layout | chore-frontend-redesign | Must | Planned |
+| BL-29 | Restyle `results.html`/`_results_table.html`/`_pair_row.html` (table zebra/hover, disabled-button treatment) | chore-frontend-redesign | Must | Planned |
+| BL-30 | Extend `.claude/agents/tester.md` with Playwright Visual QA pass; add `playwright` to `requirements-dev.txt` | chore-frontend-redesign | Must | Done |
 
 ## Priority legend
 

@@ -103,6 +103,22 @@ expected to produce, and current status.
 | FR-5.1 | AC-M3-40 | `tests/test_routers/test_results_m3.py::test_results_fingerprint_has_no_nn_sublabel`, `::test_results_ngram_fingerprint_has_no_nn_sublabel`, `::test_results_fingerprint_distance_column_still_shows_em_dash` | Done |
 | FR-4.3 | AC-M3-41 | `tests/test_algorithms/test_blocking.py::test_blocking_module_does_not_import_pandas`, `tests/test_algorithms/test_ncd.py::test_ncd_module_does_not_import_pandas`, `tests/test_algorithms/test_nearest_neighbor.py::test_nearest_neighbor_module_does_not_import_pandas` | Done |
 
+## chore-frontend-redesign — OpenRefine-Style Frontend Redesign
+
+| Requirement | Acceptance Criteria | Test file/case | Status |
+|---|---|---|---|
+| FR-9.1 | AC-CHORE-1 | `tests/test_static/test_design_tokens.py::test_root_defines_required_color_custom_properties` | Planned |
+| FR-9.2 | AC-CHORE-2 | `tests/test_static/test_design_tokens.py::test_root_defines_required_spacing_custom_properties` | Planned |
+| FR-9.3 | AC-CHORE-3 | `tests/test_static/test_no_inline_styles.py::test_no_template_contains_inline_style_attribute` | Planned |
+| FR-9.4 | AC-CHORE-4 | `tests/test_static/test_design_tokens.py::test_site_header_rule_uses_header_color_tokens` | Planned |
+| FR-9.5 | AC-CHORE-5 | `tests/test_templates/test_mapping_layout.py::test_mapping_fields_wrapped_in_control_row_and_group`, `::test_mapping_field_attributes_unchanged` | Planned |
+| FR-9.5 | AC-CHORE-6 | `tests/test_templates/test_algorithm_layout.py::test_algorithm_fields_wrapped_in_control_row_and_group`, `::test_algorithm_field_attributes_unchanged` | Planned |
+| FR-9.6 | AC-CHORE-7 | `tests/test_templates/test_button_classes.py::test_upload_button_has_btn_primary_class`, `::test_mapping_button_has_btn_primary_class`, `::test_algorithm_button_has_btn_primary_class` | Planned |
+| FR-9.7 | AC-CHORE-8 | `tests/test_static/test_design_tokens.py::test_results_table_header_row_shading_rule_exists`, `::test_results_table_zebra_striping_rules_exist`, `::test_results_table_hover_rule_exists` | Planned |
+| FR-9.8 | AC-CHORE-9 | `tests/test_static/test_design_tokens.py::test_disabled_button_rule_exists_and_distinct`, `tests/test_templates/test_button_classes.py::test_pair_row_accept_reject_buttons_have_btn_class` | Planned |
+| FR-9.1–FR-9.8 | AC-CHORE-10 | full existing `pytest -q` suite (M1–M3 tests unmodified, zero new failures) | Planned |
+| FR-9.9 | AC-CHORE-11, AC-CHORE-12, AC-CHORE-13, AC-CHORE-14 | tester's Visual QA pass (Playwright screenshots vs. `docs/design/reference/screenshots/`); reported as Visual — Must fix / Visual — Informational, not a `pytest` case | Planned |
+
 ## M4-M5
 
 Not yet authored — to be added by the BA pass that runs before each of

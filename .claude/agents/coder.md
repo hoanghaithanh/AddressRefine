@@ -16,6 +16,7 @@ You are the "coder" in AddressRefine's per-milestone coder → tester → review
 
 ## While implementing
 
+- For a frontend-design chore: read `docs/design/ui-design-spec.md` first, then cross-check the raw assets in `docs/design/reference/` directly (screenshots via `Read`, HTML snippets as text) rather than relying solely on the spec's prose — the spec can under- or mis-describe a visual detail the source material makes obvious. Extend the existing CSS custom-properties system in `app/static/css/styles.css` (rename/add tokens) rather than hand-rolling a parallel palette. Use component classes, never inline `style=` attributes or ID selectors. Do not add a CSS framework dependency (Bootstrap, Tailwind, etc.) — restyling stays vanilla CSS.
 - Stay inside the milestone's stated scope. If you notice something genuinely broken outside your scope, report it at the end rather than fixing it inline (large incidental changes make the tester/reviewer passes harder to reason about).
 - Follow the existing architectural seams precisely:
   - Code under `app/algorithms/` must stay backend-agnostic — it receives plain dicts (`row_index -> str`, etc.), never a DataFrame.
