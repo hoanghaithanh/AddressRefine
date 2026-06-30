@@ -10,6 +10,7 @@ Full architecture/design rationale lives in the original plan at `C:\Users\hoang
 py -3.11 -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements-dev.txt
+playwright install chromium    # one-time; downloads headless Chromium for visual QA (frontend-design chores)
 ```
 
 ## Common commands
@@ -59,10 +60,13 @@ This project is built milestone-by-milestone (see the plan file above for the fu
 
 The orchestrating session folds the BA's acceptance criteria into the milestone's GitHub issue body before the coder pass starts. M1 predates this process — it went straight through coder → tester → reviewer, and its `docs/ba/` artifacts were backfilled retroactively rather than written up front.
 
+**Chores** (process/tooling work that doesn't belong to a numbered milestone, e.g. agent-definition changes or a frontend redesign) go through the same four-step loop, with two adjustments: (a) tracking is a plain GitHub issue, not a Milestone object, and per-artifact files use a `chore-<slug>` stem instead of `m<N>-<slug>`; (b) a frontend-visual chore specifically adds a Visual QA pass to the tester step (Playwright screenshots compared against `docs/design/reference/`, reported as **Visual — Must fix** / **Visual — Informational**) alongside, not instead of, normal `pytest` coverage. See `.claude/agents/tester.md` for the Visual QA pass details and `docs/design/README.md` for where reference material lives.
+
 ## GitHub repo conventions
 
 - **Repo**: https://github.com/hoanghaithanh/AddressRefine (public). Remote `origin` uses SSH.
 - **Branching, from M2 onward**: one feature branch per milestone (e.g. `m2-fingerprint-algorithms`), opened as a PR linked to that milestone's issue. The senior-dev review pass reports its findings to the orchestrating session before merge. M1 was the exception — it was committed directly to `main` before this convention was adopted.
+- **Chore branches**: process/tooling/non-feature work that doesn't belong to a numbered milestone (e.g. `chore/add-business-analyst-agent`, `chore/custom-agents`, `chore/frontend-redesign-openrefine`) uses a `chore/<slug>` branch and a plain GitHub issue — not a Milestone object — opened as a PR the same way a milestone branch is.
 - **Branch protection on `main`**: PRs required for all changes (no direct pushes), no force-push, no branch deletion. `required_approving_review_count` is intentionally `0` — this is a solo project, so the senior-dev review pass substitutes for a second human approver rather than blocking merge on one.
 - **Milestones/Issues/Project board**: GitHub Milestones M1–M5 mirror the plan's milestone breakdown (M1, M2, and M3 are closed). Each milestone has one tracking issue (#1–#5) summarizing its scope from the plan. All issues are on the "AddressRefine Roadmap" project board. When a milestone's scope changes, update its issue body and milestone description, not just this file.
 - **CI status checks are not yet required** on the branch protection rule because `.github/workflows/ci.yml` doesn't exist until M5. Once M5 lands CI, add it as a required status check on `main`.
