@@ -37,6 +37,17 @@ ruff format --check .              # format check
 - **Algorithms are backend-agnostic** (from Milestone 2 onward): `MatchingAlgorithm` implementations in `app/algorithms/` operate on `dict[int, str]`/`dict[str, list[int]]`, never on a DataFrame. If a new algorithm needs row metadata beyond the street address, extend `ComputeBackend.extract_columns`'s output shape, not the algorithm's input type.
 - **Upload size limit**: enforced by reading the upload in chunks and aborting as soon as the running total exceeds `settings.MAX_UPLOAD_BYTES` (10 MB) — not by reading the whole file first and checking after. Keep this streaming-check pattern for any future upload-like endpoint.
 
+## Frontend conventions
+
+`app/static/css/styles.css` is a single hand-written design system styled after [OpenRefine](https://openrefine.org/) (established by the `chore/frontend-redesign-openrefine` chore, issue #10) — no CSS framework, no build step.
+
+- **Palette/spacing are CSS custom properties** in `:root` (`--color-*`, `--space-*`). Don't hardcode a hex literal or a bare `rem`/`px` spacing value in a component rule — add or reuse a custom property instead. (Two pre-existing exceptions not yet tokenized: `.flash-info` and the `tr:hover` background literal — fix forward if you're touching either rule anyway, not required otherwise.)
+- **No inline `style=` attributes** in any template, and **no ID-based CSS selectors** where a class works — use/extend the existing component classes instead.
+- **Layout pattern**: group related form fields with `.control-row` (flex row) wrapping one or more `.control-group` (flex column: label + input) elements — see `mapping.html`/`algorithm.html`. Inputs/selects get the shared `.field` class for consistent border/padding/focus/disabled styling.
+- **Buttons**: `.btn` is the base (flat gray, regular weight); `.btn-primary` and `.btn-secondary` add the same flat background but differ in font-weight (bold vs. regular) — OpenRefine's style is bold-vs-regular emphasis, not a saturated brand color, don't reintroduce one.
+- **Reference material**: `docs/design/ui-design-spec.md` is the source of truth for palette/typography/spacing/component decisions; `docs/design/reference/` holds the raw OpenRefine screenshots/HTML this was derived from. See `docs/design/README.md`.
+- This redesign is **visual-only** — it deliberately did not add the editable "new cell value" field, merge/export action-bar footer, or any screen-merging seen in OpenRefine's reference UI. Those are in scope for M4, which should extend (not replace) this component system.
+
 ## Known v1 tradeoffs (intentional, not bugs)
 
 - Single in-memory session, no auth, no persistence across restarts.
