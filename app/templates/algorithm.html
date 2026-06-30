@@ -24,6 +24,37 @@
     value="{{ algorithm_params.n if algorithm_params and algorithm_params.n else 2 }}"
   >
 
+  {# Threshold field: shown for nearest-neighbor algorithms (Levenshtein and NCD),
+     hidden for key-collision algorithms (Fingerprint and N-Gram Fingerprint).
+     For Levenshtein: threshold >= 0 integer, default 3 (edit distance).
+     For NCD: threshold 1–10 integer, default 3 (scaled internally to 0.1–1.0). #}
+  {% set nn_keys = [] %}
+  {% for algo in algorithms %}
+    {% if algo.family.value == "nearest_neighbor" %}
+      {% set _ = nn_keys.append(algo.key) %}
+    {% endif %}
+  {% endfor %}
+
+  {% if selected_key in nn_keys %}
+  <label for="threshold">Threshold
+    {% if selected_key == "levenshtein" %}(max edit distance, &ge; 0){% endif %}
+    {% if selected_key == "ncd" %}(similarity, 1–10; internally scaled to 0.1–1.0){% endif %}
+  </label>
+  <input
+    type="number"
+    id="threshold"
+    name="threshold"
+    min="{% if selected_key == 'ncd' %}1{% else %}0{% endif %}"
+    max="{% if selected_key == 'ncd' %}10{% endif %}"
+    step="1"
+    value="{{ algorithm_params.threshold if algorithm_params and algorithm_params.threshold is not none else 3 }}"
+  >
+  {% else %}
+  {# Hidden threshold field so POSTed form always includes the field name;
+     ignored by the router for key-collision algorithms. #}
+  <input type="hidden" name="threshold" value="">
+  {% endif %}
+
   <button type="submit">Run matching</button>
 </form>
 {% endblock %}

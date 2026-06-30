@@ -43,4 +43,4 @@ def test_list_algorithms_returns_a_new_list_each_call():
 
     second = list_algorithms()
 
-    assert len(second) == 2
+    assert len(second) == 4  # fingerprint, ngram_fingerprint, levenshtein, ncd

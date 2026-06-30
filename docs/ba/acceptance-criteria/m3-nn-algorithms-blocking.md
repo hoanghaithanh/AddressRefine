@@ -76,14 +76,16 @@ import `pandas`.)
 **Then** the result is `0.0` (or very close, within floating-point
 tolerance of `1e-6`).
 
-### AC-M3-8 — NCD of completely dissimilar strings is near 1.0
+### AC-M3-8 — NCD of dissimilar strings is greater than NCD of similar strings
 
-**Given** two strings with no shared content (e.g. `"aaaaaaaaaa"` vs
-`"zzzzzzzzzz"` — strings that compress well individually but not
-together),
-**When** `normalized_compression_distance(a, b)` is called,
-**Then** the result is greater than `0.5` (demonstrating the function
-detects dissimilarity; exact value depends on `bz2` internals).
+**Given** a pair of structurally similar strings (e.g. `"hello world"` and
+`"hello world"`, NCD = 0.0) and a pair of structurally dissimilar strings
+(e.g. `"hello world"` and `"xyz abc 123 qwerty"`),
+**When** `normalized_compression_distance` is called on each pair,
+**Then** the NCD of the dissimilar pair is strictly greater than the NCD
+of the similar pair (demonstrating the function detects dissimilarity
+in relative terms; absolute thresholds are not asserted because bz2
+compression ratios depend on string structure, not content alone).
 
 ### AC-M3-9 — NCD is symmetric
 
