@@ -1,6 +1,9 @@
 # Data Flow Diagram — AddressRefine
 
-Status: Living document. Last revised: M2 BA pass (2026-06-28).
+Status: Living document. Last revised: M4 BA pass (2026-06-30). `P3`/`P5`
+below were merged into one combined process by M4 (was two separate
+processes — algorithm selection then results review/mutation — in the
+M2/M3 version of this diagram).
 
 ## Level 0 — Context
 
@@ -10,8 +13,8 @@ flowchart LR
     App["Process: AddressRefine app (FastAPI)"]
     Session[("Data store: in-memory SessionStore")]
 
-    User -- "CSV upload, mapping form, algorithm choice, accept/reject/merge actions" --> App
-    App -- "HTML pages/fragments, CSV download" --> User
+    User -- "CSV upload, mapping form, Method/Distance function/param choice, Merge? checkbox + New cell value + merge submit" --> App
+    App -- "HTML pages/fragments (HTMX partial swaps), CSV download" --> User
     App -- "read/write Session (mapping, versions, candidate_pairs, algorithm_params)" --> Session
     Session -- "current session state" --> App
 ```
@@ -25,9 +28,8 @@ flowchart TD
 
     P1["P1: Handle upload (routers/upload.py)"]
     P2["P2: Handle column mapping (routers/mapping.py)"]
-    P3["P3: Handle algorithm selection (routers/algorithm.py)"]
+    P3["P3: Combined algorithm selection + live results (routers/algorithm.py) - M4 merges the former P3/P5"]
     P4["P4: Run matching (services/matching_service.py)"]
-    P5["P5: Render/mutate results (routers/results.py)"]
     P6["P6: Apply merge (services/merge_service.py)"]
     P7["P7: Export CSV (routers/export.py)"]
 
@@ -39,20 +41,20 @@ flowchart TD
     P2 -- "get_headers via ComputeBackend" --> DS_Session
     P2 -- "ColumnMapping" --> DS_Session
 
-    User -- "algorithm key + params" --> P3
-    P3 -- "AlgorithmParams" --> DS_Session
+    User -- "Method + Distance function + Radius/N-Gram size (HTMX, live, no submit button)" --> P3
+    P3 -- "algorithm_key + algorithm_params" --> DS_Session
     P3 --> P4
 
     DS_Session -- "mapping, current frame" --> P4
-    P4 -- "extract_street_addresses via ComputeBackend" --> P4
-    P4 -- "candidate_pairs (clusters/pairs)" --> DS_Session
+    P4 -- "extract_street_addresses / extract_columns via ComputeBackend" --> P4
+    P4 -- "candidate_pairs (always pairwise, 2 rows each)" --> DS_Session
 
-    DS_Session -- "candidate_pairs" --> P5
-    User -- "accept/reject/representative" --> P5
-    P5 -- "updated CandidatePair" --> DS_Session
+    DS_Session -- "candidate_pairs" --> P3
+    P3 -- "renders live results-table partial" --> User
 
-    DS_Session -- "accepted pairs, current frame" --> P6
-    P6 -- "replace_values via ComputeBackend" --> P6
+    User -- "checked pair_ids + New cell value text, Merge selected and re-cluster" --> P6
+    P6 -- "conflict check (blocks on disagreement, mutates nothing)" --> P6
+    P6 -- "replace_values via ComputeBackend, per checked pair" --> P6
     P6 -- "new DatasetVersion" --> DS_Session
     P6 --> P4
 
@@ -71,3 +73,9 @@ flowchart TD
 - There is exactly one data store (`D1`, the in-memory `SessionStore`); no
   external database or third-party API is part of this system's data
   flow in v1.
+- **M4 change**: the former `P5` ("Render/mutate results", with its own
+  per-pair accept/reject/representative mutation path) no longer exists as
+  a separate process. Live recompute (Method/Distance function/param
+  change) and merge submission are now the only two write paths into `P4`,
+  both routed through the single combined `P3` process — there is no
+  intermediate per-pair "accepted" state stored in `D1` between them.

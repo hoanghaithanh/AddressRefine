@@ -77,9 +77,11 @@ def test_run_matching_called_twice_does_not_duplicate_entries():
     assert len(session.candidate_pairs) == len(first_run_pairs)
 
 
-def test_cluster_becomes_one_candidate_pair_entry_not_pairwise():
-    """AC-M2-17: a 3-row cluster becomes exactly one CandidatePair entry
-    covering all 3 rows, not 3 separate pairwise entries."""
+def test_cluster_of_three_explodes_into_three_pairwise_entries():
+    """AC-M4-11 (supersedes M2's AC-M2-17): a 3-row cluster explodes into
+    exactly 3 pairwise CandidatePair entries (one per combination), each with
+    row_indices of length 2 — not one 3-member entry, per M4's pairwise-only
+    CandidatePair model."""
     csv_bytes = b"StreetAddress\n123 Main St\n123 MAIN ST.\n123 main st.\n456 Oak Ave\n"
     mapping = ColumnMapping(street_col="StreetAddress")
     session = _make_session(csv_bytes, mapping)
@@ -87,8 +89,10 @@ def test_cluster_becomes_one_candidate_pair_entry_not_pairwise():
 
     run_matching(session)
 
-    assert len(session.candidate_pairs) == 1
-    assert session.candidate_pairs[0].row_indices == [0, 1, 2]
+    assert len(session.candidate_pairs) == 3
+    pairs_as_sets = {tuple(pair.row_indices) for pair in session.candidate_pairs}
+    assert pairs_as_sets == {(0, 1), (0, 2), (1, 2)}
+    assert all(len(pair.row_indices) == 2 for pair in session.candidate_pairs)
 
 
 def test_singleton_keys_produce_no_candidate_pair():
@@ -165,3 +169,17 @@ def test_run_matching_with_ngram_algorithm_uses_algorithm_params():
 
     assert len(session.candidate_pairs) == 1
     assert session.candidate_pairs[0].row_indices == [0, 1]
+
+
+def test_run_matching_rebuilds_candidate_pairs_pairwise_count_matches_combinations():
+    """AC-M4-15 sanity check at the matching_service level: a 4-row cluster
+    explodes into C(4, 2) = 6 pairwise entries."""
+    csv_bytes = b"StreetAddress\n123 Main St\n123 MAIN ST.\n123 main st.\n123  MAIN  ST\n"
+    mapping = ColumnMapping(street_col="StreetAddress")
+    session = _make_session(csv_bytes, mapping)
+    session.algorithm_key = "fingerprint"
+
+    run_matching(session)
+
+    assert len(session.candidate_pairs) == 6
+    assert all(len(pair.row_indices) == 2 for pair in session.candidate_pairs)

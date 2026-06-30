@@ -119,7 +119,81 @@ expected to produce, and current status.
 | FR-9.1–FR-9.8 | AC-CHORE-10 | full existing `pytest -q` suite (M1–M3 tests unmodified, zero new failures) | Planned |
 | FR-9.9 | AC-CHORE-11, AC-CHORE-12, AC-CHORE-13, AC-CHORE-14 | tester's Visual QA pass (Playwright screenshots vs. `docs/design/reference/screenshots/`); reported as Visual — Must fix / Visual — Informational, not a `pytest` case | Planned |
 
-## M4-M5
+## M4 — Combined Algorithm/Results Page + Pairwise Merge
 
-Not yet authored — to be added by the BA pass that runs before each of
-those milestones' `coder` passes start.
+| Requirement | Acceptance Criteria | Test file/case | Status |
+|---|---|---|---|
+| FR-3.2 | AC-M4-1 | `tests/test_routers/test_algorithm_m4.py::test_get_algorithm_renders_method_field_with_nn_and_fingerprint_options` | Done |
+| FR-3.2 | AC-M4-2 | `tests/test_routers/test_algorithm_m4.py::test_get_algorithm_distance_function_options_present_for_all_four_algorithms`, `::test_get_algorithm_distance_function_labels_match_registry` (option filtering itself is client-side per `match.js`; the router test asserts every option + its `data-family` attribute is present in the rendered HTML for the JS to filter) | Done |
+| FR-3.3 | AC-M4-3 | `tests/test_routers/test_algorithm_m4.py::test_get_algorithm_radius_label_shown_for_levenshtein`, `::test_get_algorithm_radius_label_shown_for_ncd` | Done |
+| FR-3.3 | AC-M4-4 | `tests/test_routers/test_algorithm_m4.py::test_get_algorithm_no_param_field_for_fingerprint` | Done |
+| FR-3.3 | AC-M4-5 | `tests/test_routers/test_algorithm_m4.py::test_get_algorithm_ngram_size_label_shown_for_ngram_fingerprint` | Done |
+| FR-3.4 | AC-M4-6 | `tests/test_routers/test_algorithm_m4.py::test_recompute_change_method_to_nn_reruns_with_default_nn_algorithm` | Done |
+| FR-3.4 | AC-M4-7 | `tests/test_routers/test_algorithm_m4.py::test_recompute_change_distance_function_reruns_matching` | Done |
+| FR-3.4 | AC-M4-8 | `tests/test_routers/test_algorithm_m4.py::test_recompute_change_radius_reruns_matching_with_new_threshold`, `::test_recompute_change_ngram_size_reruns_matching` | Done |
+| FR-3.4 | AC-M4-9 | `tests/test_routers/test_algorithm_m4.py::test_recompute_invalid_levenshtein_threshold_negative_returns_422`, `::test_recompute_invalid_ncd_threshold_zero_returns_422`, `::test_recompute_invalid_ncd_threshold_above_ten_returns_422`, `::test_recompute_invalid_ngram_size_zero_returns_422`, `::test_recompute_invalid_ngram_size_non_integer_returns_422`, `::test_recompute_invalid_param_does_not_mutate_session_or_run_matching`, `::test_recompute_unknown_algorithm_key_returns_422` | Done |
+| FR-3.7 | AC-M4-10 | `tests/test_routers/test_algorithm_m4.py::test_get_results_redirects_to_algorithm`, `::test_get_results_redirects_regardless_of_session_state` | Done |
+| FR-4.2 | AC-M4-11 | `tests/test_services/test_matching_service_m4.py::test_key_collision_cluster_of_three_explodes_into_three_pairs`, `::test_ngram_fingerprint_cluster_of_three_explodes_into_three_pairs` | Done |
+| FR-4.2 | AC-M4-12 | `tests/test_services/test_matching_service_m4.py::test_key_collision_pair_distance_is_none` | Done |
+| FR-4.4 | AC-M4-13 | `tests/test_services/test_matching_service_m4.py::test_nn_transitive_abc_produces_two_separate_pairs_not_one_cluster` | Done |
+| FR-4.4 | AC-M4-14 | `tests/test_services/test_matching_service_m4.py::test_nn_pair_distance_is_the_single_pairwise_distance_not_a_max` | Done |
+| FR-4.4 | AC-M4-15 | `tests/test_services/test_matching_service_m4.py::test_candidate_pair_row_indices_always_length_two` (parametrized over fingerprint, ngram_fingerprint, levenshtein, ncd) | Done |
+| FR-4.1 | AC-M4-16 | `tests/test_services/test_matching_service_m4.py::test_run_matching_rebuilds_candidate_pairs_from_scratch_with_fresh_pair_ids` | Done |
+| FR-5.2 | AC-M4-17 | `tests/test_routers/test_algorithm_m4.py::test_results_table_renders_merge_checkbox_unchecked_by_default` | Done |
+| FR-5.2 | AC-M4-18 | `tests/test_routers/test_algorithm_m4.py::test_results_table_distance_column_shown_for_nn_pairs`, `::test_results_table_distance_column_omitted_for_fingerprint_pairs` | Done |
+| FR-5.2 | AC-M4-19 | `tests/test_routers/test_algorithm_m4.py::test_results_table_renders_two_addresses_per_row_as_clickable_elements` | Done |
+| FR-5.3 | AC-M4-20 | `tests/test_routers/test_algorithm_m4.py::test_new_cell_value_input_is_not_readonly_or_disabled` | Done |
+| FR-5.4 | AC-M4-21 | `tests/test_frontend/test_match_js.py::test_checking_merge_without_clicking_address_defaults_new_cell_value_to_first_address` (Playwright, driven against the live combined page through the real upload -> mapping -> recompute flow; module is skipped if Chromium isn't installed) | Done |
+| FR-5.5 | AC-M4-22 | `tests/test_frontend/test_match_js.py::test_clicking_either_address_sets_new_cell_value_and_checks_merge_checkbox`, `::test_clicking_address_overrides_prior_checkbox_state_regardless` | Done |
+| FR-5.6 | AC-M4-23 | `tests/test_frontend/test_match_js.py::test_new_cell_value_remains_editable_after_being_defaulted`, `::test_new_cell_value_remains_editable_after_address_click` | Done |
+| FR-5.6 (no accept/reject routes) | AC-M4-24 | `tests/test_routers/test_algorithm_m4.py::test_no_accept_reject_or_representative_endpoints_registered`, `::test_only_merge_is_a_mutating_post_route_on_results_flow` (statically asserts the FastAPI route table has no `POST /results/pair/*` route) | Done |
+| FR-6.2 | AC-M4-25 | `tests/test_services/test_merge_service.py::test_apply_merge_rewrites_both_rows_in_checked_pair_to_new_value` | Done |
+| FR-6.2 | AC-M4-26 | `tests/test_services/test_merge_service.py::test_apply_merge_is_idempotent_when_one_side_already_equals_new_value` | Done |
+| FR-6.3 | AC-M4-27 | `tests/test_services/test_merge_service.py::test_apply_merge_blocks_on_conflicting_targets_for_same_row`, `::test_apply_merge_blocked_merge_does_not_call_replace_values` | Done |
+| FR-6.3 | AC-M4-28 | `tests/test_services/test_merge_service.py::test_apply_merge_blocked_merge_mutates_nothing`, `::test_apply_merge_conflict_error_lists_conflicting_row_and_values` | Done |
+| FR-6.4 | AC-M4-29 | `tests/test_services/test_merge_service.py::test_apply_merge_appends_new_dataset_version_with_created_from_merge_true` | Done |
+| FR-6.4 | AC-M4-30 | `tests/test_services/test_merge_service.py::test_apply_merge_reruns_matching_with_currently_selected_algorithm_and_params`, `::test_apply_merge_actually_reruns_matching_end_to_end` | Done |
+| FR-6.5 | AC-M4-31 | `tests/test_services/test_merge_service.py::test_apply_merge_zero_checked_rows_is_noop_no_version_appended`, `::test_apply_merge_zero_checked_rows_does_not_invoke_run_matching` | Done |
+| FR-6.1 | AC-M4-32 | `tests/test_routers/test_merge_m4.py::test_post_merge_only_includes_checked_rows_in_request`, `::test_post_merge_empty_request_is_a_noop_and_returns_200` | Done |
+| FR-6.2, FR-6.4 | AC-M4-33 | `tests/test_routers/test_merge_m4.py::test_post_merge_success_returns_refreshed_results_table_partial`, `::test_post_merge_success_appends_dataset_version` | Done |
+| FR-6.3 | AC-M4-34 | `tests/test_routers/test_merge_m4.py::test_post_merge_conflict_returns_422_and_does_not_mutate_session` | Done |
+| compute/backend.py | AC-M4-35 | `tests/test_compute/test_pandas_backend.py::test_replace_values_sets_street_col_at_given_indices`, `::test_replace_values_multiple_row_indices` | Done |
+| compute/backend.py | AC-M4-36 | `tests/test_compute/test_pandas_backend.py::test_replace_values_does_not_raise_not_implemented` (supersedes M1's `test_replace_values_raises_not_implemented`, removed) | Done |
+| FR-9 (extends) | AC-M4-37 | `tests/test_routers/test_algorithm_m4.py::test_algorithm_html_has_no_inline_style_attribute`, `::test_results_table_partial_has_no_inline_style_attribute` | Done |
+
+Superseded/removed in this pass (M2/M3-era assertions that M4 deliberately
+supersedes, not regressions — see `m4-merge-review.md`'s "M3 reversal"
+callout):
+
+- `tests/test_routers/test_algorithm.py`, `test_algorithm_m3.py` — asserted
+  a `POST /algorithm` form-submit-then-redirect-to-`/results` flow that no
+  longer exists (replaced by `POST /algorithm/recompute` returning a
+  partial). Deleted; superseded by `test_algorithm_m4.py`.
+- `tests/test_routers/test_results.py`, `test_results_m3.py` — asserted a
+  standalone `/results` page (disabled Accept/Reject buttons, distance
+  sub-labels) that M4 removes entirely. Deleted; `GET /results` is now
+  covered as a redirect-only route in `test_algorithm_m4.py`.
+- `tests/test_services/test_matching_service_m3.py` — asserted transitive
+  union-find clustering and "distance = max pairwise distance in cluster",
+  both reversed by M4 (AC-M4-13/14). Deleted; superseded by
+  `test_matching_service_m4.py`.
+- `tests/test_frontend/test_design_chore.py` — asserted pre-M4
+  `algorithm.html`/`results.html` structure (separate `n`/`threshold`
+  control-groups, disabled Accept/Reject buttons on `_pair_row.html`) that
+  no longer matches the merged M4 template. Deleted; the still-relevant
+  CSS-token/no-inline-style assertions are not M4-specific and weren't
+  reintroduced as a separate file since no new design-system rules were
+  added in M4 (FR-9 regression is covered by AC-M4-37 above instead).
+- `tests/test_services/test_matching_service.py::test_cluster_becomes_one_candidate_pair_entry_not_pairwise` —
+  renamed to `test_cluster_of_three_explodes_into_three_pairwise_entries` and
+  rewritten to assert the new pairwise-explosion behavior (was asserting
+  the now-superseded M2 single-multi-row-entry behavior).
+- `tests/test_compute/test_pandas_backend.py::test_replace_values_raises_not_implemented` —
+  replaced with `test_replace_values_sets_street_col_at_given_indices` /
+  `test_replace_values_multiple_row_indices` / `test_replace_values_does_not_raise_not_implemented`
+  now that M4 implements `replace_values` for real (AC-M4-35/36).
+
+## M5
+
+Not yet authored — to be added by the BA pass that runs before M5's
+`coder` pass starts.

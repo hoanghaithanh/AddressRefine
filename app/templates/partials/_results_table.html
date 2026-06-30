@@ -1,24 +1,40 @@
-<table class="results-table">
-  <thead>
-    <tr>
-      <th>Candidate addresses</th>
-      <th>
-        Distance
-        {# Per-algorithm sub-label for the distance column scale.
-           Key-collision algorithms (fingerprint, ngram_fingerprint) show no sub-label
-           because they don't produce a numeric distance — cells show "—". #}
-        {% if algorithm_key == "levenshtein" %}
-          <span class="distance-sublabel">(edit distance)</span>
-        {% elif algorithm_key == "ncd" %}
-          <span class="distance-sublabel">(NCD score 0–1)</span>
-        {% endif %}
-      </th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for group in groups %}
-      {% include "partials/_pair_row.html" %}
-    {% endfor %}
-  </tbody>
-</table>
+<div id="results-table-container">
+  {% include "partials/_flash.html" %}
+  {% if groups %}
+    <form
+      id="merge-form"
+      class="merge-form"
+      method="post"
+      action="/merge"
+      hx-post="/merge"
+      hx-target="#results-table-container"
+      hx-swap="outerHTML"
+    >
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>Merge?</th>
+            <th>Candidate addresses</th>
+            <th>New cell value</th>
+            {% if algorithm_family == AlgorithmFamily.NEAREST_NEIGHBOR %}
+              <th>Distance</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for group in groups %}
+            {% include "partials/_pair_row.html" %}
+          {% endfor %}
+        </tbody>
+      </table>
+      <button type="submit" class="btn btn-primary">Merge selected & re-cluster</button>
+    </form>
+  {% else %}
+    <div class="results-empty-state">
+      <p>
+        No candidate duplicates found with the current Method, Distance
+        function, and parameter settings. Try a different combination above.
+      </p>
+    </div>
+  {% endif %}
+</div>

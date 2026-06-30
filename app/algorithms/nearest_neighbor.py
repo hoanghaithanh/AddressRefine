@@ -36,7 +36,7 @@ class LevenshteinNNAlgorithm(MatchingAlgorithm):
     label = "Levenshtein Distance"
     family = AlgorithmFamily.NEAREST_NEIGHBOR
     param_specs: list[ParamSpec] = [
-        ParamSpec(name="threshold", label="Max edit distance", param_type=int, default=3),
+        ParamSpec(name="threshold", label="Radius", param_type=int, default=3),
     ]
 
     def run(
@@ -91,7 +91,7 @@ class NCDAlgorithm(MatchingAlgorithm):
     label = "PPM / NCD"
     family = AlgorithmFamily.NEAREST_NEIGHBOR
     param_specs: list[ParamSpec] = [
-        ParamSpec(name="threshold", label="Similarity threshold (1–10)", param_type=int, default=3),
+        ParamSpec(name="threshold", label="Radius", param_type=int, default=3),
     ]
 
     def run(

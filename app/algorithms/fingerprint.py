@@ -85,7 +85,7 @@ class NGramFingerprintAlgorithm(MatchingAlgorithm):
     label = "N-Gram Fingerprint"
     family = AlgorithmFamily.KEY_COLLISION
     param_specs: list[ParamSpec] = [
-        ParamSpec(name="n", label="N-gram size", param_type=int, default=2),
+        ParamSpec(name="n", label="N-Gram size", param_type=int, default=2),
     ]
 
     def _ngram_key(self, address: str, n: int) -> str | None:

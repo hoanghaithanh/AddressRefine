@@ -69,8 +69,42 @@ def test_extract_columns_unmapped_logical_column_is_empty_string(backend):
     assert extracted[0]["street"] == "123 Main St"
 
 
-def test_replace_values_raises_not_implemented(backend):
+def test_replace_values_sets_street_col_at_given_indices(backend):
+    """AC-M4-35/36: replace_values sets street_col to new_value at every given
+    row index, and other rows/columns are unaffected. Supersedes M1's
+    test_replace_values_raises_not_implemented now that M4 implements this
+    for real."""
     frame = backend.load_csv(sample_csv_bytes())
 
-    with pytest.raises(NotImplementedError):
+    updated = backend.replace_values(frame, "StreetAddress", [0], "123 Merged St")
+
+    mapping = ColumnMapping(
+        street_col="StreetAddress", zip_col="ZipCode", city_col="City", country_col="Country"
+    )
+    extracted = backend.extract_columns(updated, mapping)
+    assert extracted[0]["street"] == "123 Merged St"
+    # Row 1 (untouched) and other columns of row 0 are unaffected.
+    assert extracted[1]["street"] == "456 Oak Ave"
+    assert extracted[0]["zip"] == "00501"
+
+
+def test_replace_values_multiple_row_indices(backend):
+    """AC-M4-35: replace_values accepts multiple row indices in one call."""
+    frame = backend.load_csv(sample_csv_bytes())
+
+    updated = backend.replace_values(frame, "StreetAddress", [0, 1], "999 Unified Ave")
+
+    mapping = ColumnMapping(street_col="StreetAddress")
+    extracted = backend.extract_columns(updated, mapping)
+    assert extracted[0]["street"] == "999 Unified Ave"
+    assert extracted[1]["street"] == "999 Unified Ave"
+
+
+def test_replace_values_does_not_raise_not_implemented(backend):
+    """AC-M4-36: replace_values no longer raises NotImplementedError."""
+    frame = backend.load_csv(sample_csv_bytes())
+
+    try:
         backend.replace_values(frame, "StreetAddress", [0], "new value")
+    except NotImplementedError:
+        pytest.fail("replace_values must not raise NotImplementedError as of M4")
